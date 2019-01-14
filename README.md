@@ -20,7 +20,7 @@ git clone https://github.com/WISE-PaaS/sso-integration-examples.git
 
 此外，由於安全性問題，前端應用程式是無法直接從瀏覽器取得此 cookie 的。但它仍然可以透過 Ajax 取得使用者資訊。
 
-### [HTML]
+### [HTML & JavaScript]
 #### 步驟 1. 建立 index.html，宣告主要變數，並匯入jQuery函式庫
 ```
 <html>
@@ -42,37 +42,37 @@ git clone https://github.com/WISE-PaaS/sso-integration-examples.git
 
 #### 步驟 2. 新增登入按鈕，並將登入按鈕整合登入功能
 ```
-	<button type="button" id="signInBtn">Sign in</button>
+    <button type="button" id="signInBtn">Sign in</button>
 
-	<script>
-	    $('#signInBtn').click(function () {
-	        window.location.href = ssoUri + '/web/signIn.html?redirectUri=' + redirectUriAfterLogin;
-	    });
-	</script>
+    <script>
+        $('#signInBtn').click(function () {
+            window.location.href = ssoUri + '/web/signIn.html?redirectUri=' + redirectUriAfterLogin;
+        });
+    </script>
 ```
 #### 步驟 3. 新增登出按鈕，並將登出按鈕整合登出功能
 ```
-	<button type="button" id="signOutBtn">Sign out</button>
+    <button type="button" id="signOutBtn">Sign out</button>
 
-	<script>
-	    $('#signOutBtn').click(function () {
-	        window.location.href = ssoUri + '/web/signOut.html?redirectUri=' + redirectUriAfterLogout;
-	    });
-	</script>
+    <script>
+        $('#signOutBtn').click(function () {
+            window.location.href = ssoUri + '/web/signOut.html?redirectUri=' + redirectUriAfterLogout;
+        });
+    </script>
 ```
 #### 步驟4. 驗證整合是否成功，將以下語法新增至登入成功後欲導向的URI之前端網頁，該網頁亦須匯入jQuery函式庫，藉由取得使用者姓名的方式進行驗證
 ```
-	<script>
-	    $.ajax({
-	        url: ssoUri  + '/v2.0/users/me',
-	        method: 'GET',
-	        xhrFields: {
-	            withCredentials: true
-	        }
-	    }).done(function (user) {
-	        alert('Hello! ' + user.lastName + ' ' + user.firstName);
-	    });
-	</script>
+    <script>
+        $.ajax({
+            url: ssoUri  + '/v2.0/users/me',
+            method: 'GET',
+            xhrFields: {
+                withCredentials: true
+            }
+        }).done(function (user) {
+            alert('Hello! ' + user.lastName + ' ' + user.firstName);
+        });
+    </script>
 ```
 #### 步驟5. 將前端應用程式部署至WISE-PaaS雲平台
 ```
@@ -110,33 +110,33 @@ public class SsoService {
 ```
 #### 步驟 2. 整合取得令牌功能
 ```
-	public ObjectNode getToken(ObjectNode auth) {
-	    String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/auth/native");
-	    RestTemplate restTemplate = new RestTemplate();
-	    RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(auth, HttpMethod.POST, URI.create(apiUrl));
-	    return restTemplate.exchange(req, ObjectNode.class).getBody();
-	}
+    public ObjectNode getToken(ObjectNode auth) {
+        String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/auth/native");
+        RestTemplate restTemplate = new RestTemplate();
+        RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(auth, HttpMethod.POST, URI.create(apiUrl));
+        return restTemplate.exchange(req, ObjectNode.class).getBody();
+    }
 ```
 #### 步驟 3. 整合重新換發令牌功能
 ```
-	public ObjectNode refreshToken(ObjectNode tokenPayload) {
-	    String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/token");
-	    RestTemplate restTemplate = new RestTemplate();
-	    RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(tokenPayload, HttpMethod.POST, URI.create(apiUrl));
-	    return restTemplate.exchange(req, ObjectNode.class).getBody();
-	}
+    public ObjectNode refreshToken(ObjectNode tokenPayload) {
+        String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/token");
+        RestTemplate restTemplate = new RestTemplate();
+        RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(tokenPayload, HttpMethod.POST, URI.create(apiUrl));
+        return restTemplate.exchange(req, ObjectNode.class).getBody();
+    }
 ```
 
 #### 步驟 4. 整合取得令牌之使用者資訊功能
 ```
-	public ObjectNode getTokenUser(String accessToken) {
-	    String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/users/me");
-	    RestTemplate restTemplate = new RestTemplate();
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.set("Authorization", String.format("Bearer %s", accessToken));
-	    RequestEntity<Void> req = new RequestEntity<Void>(headers, HttpMethod.GET, URI.create(apiUrl));
-	    return restTemplate.exchange(req, ObjectNode.class).getBody();
-	}
+    public ObjectNode getTokenUser(String accessToken) {
+        String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/users/me");
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", String.format("Bearer %s", accessToken));
+        RequestEntity<Void> req = new RequestEntity<Void>(headers, HttpMethod.GET, URI.create(apiUrl));
+        return restTemplate.exchange(req, ObjectNode.class).getBody();
+    }
 ```
 #### 步驟 5. 驗證整合是否成功，可建立新Java檔案，並加上@RestController註解
 ```
@@ -154,16 +154,16 @@ public class SsoController {
 ```
 #### 步驟 6. 藉由新增取得使用者資訊之API進行驗證
 ```
-	@RequestMapping(method = RequestMethod.GET, value = "/users/me")
-	  public ResponseEntity<ObjectNode> getTokenUser(@RequestParam(value = "username", required = true) String username,
-	      @RequestParam(value = "password", required = true) String password) {
-	    ObjectNode auth = objMapper.createObjectNode().put("username", username).put("password", password);
-	    ObjectNode tokenPackage = ssoService.getToken(auth);
-	    ObjectNode tokenPayload = objMapper.createObjectNode().put("token", tokenPackage.get("refreshToken").asText());
-	    tokenPackage = ssoService.refreshToken(tokenPayload);
-	    return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(tokenPackage.get("accessToken").asText()),
-	        HttpStatus.OK);
-	}
+    @RequestMapping(method = RequestMethod.GET, value = "/users/me")
+      public ResponseEntity<ObjectNode> getTokenUser(@RequestParam(value = "username", required = true) String username,
+          @RequestParam(value = "password", required = true) String password) {
+        ObjectNode auth = objMapper.createObjectNode().put("username", username).put("password", password);
+        ObjectNode tokenPackage = ssoService.getToken(auth);
+        ObjectNode tokenPayload = objMapper.createObjectNode().put("token", tokenPackage.get("refreshToken").asText());
+        tokenPackage = ssoService.refreshToken(tokenPayload);
+        return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(tokenPackage.get("accessToken").asText()),
+            HttpStatus.OK);
+    }
 ```
 #### 步驟 7. 將後端應用程式至WISE-PaaS雲平台
 ```
