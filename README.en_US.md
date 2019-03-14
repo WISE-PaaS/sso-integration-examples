@@ -103,7 +103,7 @@ We first retrieve **EIToken**, then use it to get user credentials.
 @Service
 public class SsoService {
 
-    private static final String SSO_API_ENDPOINT = "https://portal-sso.wise-paas.com/v2.0";
+    private static final String SSO_API_ENDPOINT = "https://portal-sso.ali.wise-paas.com.cn/v2.0";
 
     // Step 2~4 code snippets after this line
 }
@@ -165,10 +165,16 @@ public class SsoController {
             HttpStatus.OK);
     }
 ```
-#### Step 7. Deploy our backend app to WISE-PaaS
+#### Step 7. Build .jar file
+We need jar file in order to push into Cloud Foundry for the deployment. Jar file can be built by typing :
+```
+$ gradle build
+```
+
+#### Step 8. Deploy our backend app to WISE-PaaS
 ```
 $ cf login
-$ cf push {name of app} -m 512M -p build/libs/backend-1.0.0.jar -b java_offline_buildpack
+$ cf push {name of app} -m 512M -p build/libs/backend-1.0.0.jar -b java_buildpack_offline
 ```
 For more information on how to deploy app, please see:
 https://github.com/cloudfoundry/java-buildpack
