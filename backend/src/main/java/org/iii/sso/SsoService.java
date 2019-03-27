@@ -1,4 +1,13 @@
+
+/**
+*
+* @author 
+* updated by avbee 270319
+*/
+
 package org.iii.sso;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -7,15 +16,16 @@ import java.util.List;
 import javax.servlet.http.Cookie;
 
 import org.apache.tomcat.util.codec.binary.Base64;
-
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-
+import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
-
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,7 +41,6 @@ public class SsoService {
 
 	private String RESP_UNAUTHORIZED = "unauthorized";
 	private String RESP_SRPIDFAILED = "get srp id failed";
-	private String RESP_NULLDOMAIN = "NULL_DOMAIN";
 
 	public static final String SSO_API_ENDPOINT = "https://portal-sso.ali.wise-paas.com.cn/v2.0";
 
@@ -65,7 +74,6 @@ public class SsoService {
 
 				res.setStrJson(mapper.writeValueAsString(loginRes));
 				mapper.readValue(res.getStrJson(), ObjectNode.class);
-				System.out.println(res);
 				return res;
 
 			} else {
@@ -73,7 +81,6 @@ public class SsoService {
 				String[] tokenSplit = accessToken.split("\\.");
 				String decodeStr = new String(Base64.decodeBase64(tokenSplit[1]), "UTF-8");
 
-				System.out.println(decodeStr);
 				ObjectNode tokenInfo = new ObjectMapper().readValue(decodeStr, ObjectNode.class);
 
 				final JsonNode arrNode = new ObjectMapper().readTree(decodeStr);
@@ -83,8 +90,7 @@ public class SsoService {
 				if (role.equalsIgnoreCase("tenant")) {
 					ArrayNode userOrgIdNode = tokenInfo.withArray("groups");
 
-//					String orgId = System.getenv("org_id");
-					String orgId = "64ebfa4b-454e-4db3-8f91-7db3e169a962";
+					String orgId = System.getenv("org_id");
 
 					List<String> userOrgId = new ArrayList<>();
 					for (JsonNode node : userOrgIdNode) {
@@ -95,14 +101,12 @@ public class SsoService {
 
 						loginRes.setErrorDescription(RESP_UNAUTHORIZED);
 						res.setStrJson(mapper.writeValueAsString(loginRes));
-
 						return res;
 					}
 
 				} else {
 					if (SSO.srpId == null) {
 
-//						DEBUG
 						if (!SSO.recvSrpIdAndSecret()) {
 							loginRes.setErrorDescription(RESP_SRPIDFAILED);
 
@@ -156,12 +160,6 @@ public class SsoService {
 		 */
 //		String cfApi = "https://api.wise-paas.com";
 
-		if (cfApi.substring(cfApi.indexOf("api.") + 4) == null) {
-			loginRes.setErrorDescription(RESP_NULLDOMAIN);
-			res.setStrJson(mapper.writeValueAsString(loginRes));
-			return res;
-		}
-
 		String domain = cfApi.substring(cfApi.indexOf("api.") + 4);
 
 		Cookie cookie1 = new Cookie("EIToken", EIToken);
@@ -198,7 +196,7 @@ public class SsoService {
 				JsonNode tokenInfo = new ObjectMapper().readValue(decodeStr, JsonNode.class);
 
 				String role = tokenInfo.get("role").asText();
-				System.out.println(role);
+//				System.out.println(role);
 
 				if (role.equalsIgnoreCase("tenant")) {
 					String userOrgId = tokenInfo.withArray("groups").get(0).textValue();
@@ -253,41 +251,151 @@ public class SsoService {
 
 		return res.getErrorDescription();
 	}
-	
+
 	/*
-	 * Need to have access to SQL database. -Postpone- 
+	 * Need to have access to SQL database. -Postpone-
 	 */
-	
-//public String patchUser( String EIToken,  String content) throws Exception{
-//	
-//	String email;
-//	
-//	SSO_PatchUserRes patchUserRes = new SSO_PatchUserRes();
-//	try {
-//
-//		ObjectNode conJson = new ObjectMapper().readValue(content, ObjectNode.class);
-//		email=conJson.get("email").textValue();
-//		if(SSO.srpId==null) {
-//			if(!SSO.recvSrpIdAndSecret()) {
-//				patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
-//				return patchUserRes.getErrorDescription();
-//			}
-//		}
-//		String urlPatch = SSO.recvSSOUrl()+"/v2.0/users/"+email+"/scopes";
-//		ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-//
-//		 ObjectNode body = mapper.createObjectNode();
-//		body.put("srpId", SSO.srpId);
-//		body.put("srpSecret", SSO.srpSecret);
-//		body.put("action", "append");
-//		body.putArray("scopes");
-//		body.put("scopes", "user");
-//		StringEntity se=new StringEntity(body.toString())
-//				
-//		
-//
-//	}
-//}
+
+	public String patchUser(String EIToken, ObjectNode conJson) throws Exception {
+
+		String email;
+
+		SSO_PatchUserRes patchUserRes = new SSO_PatchUserRes();
+		try {
+
+			email = conJson.get("email").textValue();
+			if (SSO.srpId == null) {
+				if (!SSO.recvSrpIdAndSecret()) {
+					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
+					return patchUserRes.toString();
+				}
+			}
+			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
+			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+			ObjectNode body = mapper.createObjectNode();
+			body.put("srpId", SSO.srpId);
+			body.put("srpSecret", SSO.srpSecret);
+			body.put("action", "append");
+			body.putArray("scopes");
+			body.put("scopes", "user");
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
+			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
+			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
+			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
+
+			if (resJson.has("error")) {
+				if (resJson.get("message").get("exist").asInt() != -1
+						&& resJson.get("message").get("scope").asInt() != -1) {
+
+				} else {
+					patchUserRes.setErrorDescription(resJson.get("error").textValue());
+					return patchUserRes.toString();
+				}
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e.getMessage());
+			patchUserRes.setErrorDescription(e.getMessage());
+			return patchUserRes.toString();
+		}
+		PCFUtil.GetPostgresEnv();
+		/*
+		 * PostgreSql library is not present on this code. No PostgreSql library on old
+		 * version of SsoService also.
+		 */
+
+		PostgreSql sql = new PostgreSql();
+		sql.insertUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
+		return patchUserRes.toString();
+
+	}
+
+	public String deleteUser(String EIToken, ObjectNode conJson) throws Exception {
+
+		String email;
+
+		SSO_PatchUserRes patchUserRes = new SSO_PatchUserRes();
+		try {
+
+			email = conJson.get("email").textValue();
+			if (SSO.srpId == null) {
+				if (!SSO.recvSrpIdAndSecret()) {
+					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
+					return patchUserRes.toString();
+				}
+			}
+			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
+			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+			ObjectNode body = mapper.createObjectNode();
+			body.put("srpId", SSO.srpId);
+			body.put("srpSecret", SSO.srpSecret);
+			body.put("action", "append");
+			body.putArray("scopes");
+			body.put("scopes", "user");
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
+			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
+			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
+			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
+
+			if (resJson.has("error")) {
+
+				patchUserRes.setErrorDescription(resJson.get("error").textValue());
+				return patchUserRes.toString();
+
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e.getMessage());
+			patchUserRes.setErrorDescription(e.getMessage());
+			return patchUserRes.toString();
+		}
+		PCFUtil.GetPostgresEnv();
+		/*
+		 * PostgreSql library is not present on this code. No PostgreSql library on old
+		 * version of SsoService also.
+		 */
+
+		PostgreSql sql = new PostgreSql();
+		sql.deleteUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
+		return patchUserRes.toString();
+
+	}
+
+	public String doGetUserList() {
+		SSO_User allUsers = new SSO_User();
+		String strJson;
+		try {
+			PCFUtil.GetPostgresEnv();
+			PostgreSql sql = new PostgreSql();
+			allUsers = sql.getUserList(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword);
+		} catch (Exception e) {
+			// TODO: handle exception
+			allUsers.setErrorDescription(e.getMessage());
+
+		}
+		return allUsers.getErrorDescription();
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		// is it ok to create a new instance of HttpComponentsClientHttpRequestFactory
+		// everytime?
+		int timeout = 5;
+		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+		factory.setReadTimeout(timeout); // setting timeout as read timeout
+		factory.setConnectTimeout(timeout); // setting timeout as connect timeout
+
+		return factory;
+	}
 
 	public SSO_EIName doGetUserName(String EIName) {
 		SSO_EIName resEIName = new SSO_EIName();

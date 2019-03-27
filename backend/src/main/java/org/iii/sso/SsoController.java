@@ -1,3 +1,10 @@
+
+/**
+*
+* @author 
+* updated by avbee 270319
+*/
+
 package org.iii.sso;
 
 import javax.servlet.http.HttpServletResponse;
@@ -40,11 +47,37 @@ public class SsoController {
 			throws Exception {
 
 		Response getLoginToken = ssoService.doLogin(Response);
-
-		response.addCookie(getLoginToken.getCookie1());
-		response.addCookie(getLoginToken.getCookie2());
-
+		if (getLoginToken.getCookie1() != null) {
+			response.addCookie(getLoginToken.getCookie1());
+			response.addCookie(getLoginToken.getCookie2());
+		}
 		ObjectNode json = new ObjectMapper().readValue(getLoginToken.getStrJson(), ObjectNode.class);
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/add")
+	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
+			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/delete")
+	public ResponseEntity<ObjectNode> deleteUser(@RequestBody ObjectNode Response,
+			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/list")
+	public ResponseEntity<ObjectNode> userList() throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
@@ -67,9 +100,9 @@ public class SsoController {
 	public ResponseEntity<Response> doLogout() throws Exception {
 		return new ResponseEntity<Response>(ssoService.doLogout(), HttpStatus.ACCEPTED);
 	}
-	
+
 	/*
-	 * Testing request  
+	 * Testing request
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/test")
 	public ResponseEntity<loginInput> update(@RequestBody loginInput linput) {

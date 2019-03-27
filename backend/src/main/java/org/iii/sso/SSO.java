@@ -1,3 +1,9 @@
+/**
+ *
+ * @author li.jie
+ * updated by avbee 270319
+ */
+
 package org.iii.sso;
 
 import java.util.Base64;
@@ -18,7 +24,7 @@ public class SSO {
 	public static String srpId = null;
 	public static String srpSecret = null;
 	public static ArrayNode scopes = null;
-	public static String srpName = "RMM";
+	public static String srpName = "";
 
 	public static boolean recvSrpIdAndSecret() {
 		try {
@@ -26,13 +32,6 @@ public class SSO {
 
 			String orgId = System.getenv("org_id");
 			String spaceId = recvApplicationEvn("space_id");
-
-			System.out.println(srpToken);
-			/*
-			 * Debug Function
-			 */
-//			String orgId = "64ebfa4b-454e-4db3-8f91-7db3e169a962";
-			String spaceIsd = "26d52647-0c26-46d1-88c9-4dfab7773122";
 
 			String url = srpName + "?orgId=" + orgId + "&spaceId=" + spaceId;
 
@@ -138,6 +137,5 @@ public class SSO {
 		}
 		return null;
 	}
-
 
 }
