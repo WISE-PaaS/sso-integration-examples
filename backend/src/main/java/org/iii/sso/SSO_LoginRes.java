@@ -12,7 +12,7 @@ package org.iii.sso;
  */
 
 public  class SSO_LoginRes {
-	//@Override
+
     String tokenType;
     String accessToken; 
     String refreshToken;

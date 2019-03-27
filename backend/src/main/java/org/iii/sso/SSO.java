@@ -27,11 +27,12 @@ public class SSO {
 			String orgId = System.getenv("org_id");
 			String spaceId = recvApplicationEvn("space_id");
 
+			System.out.println(srpToken);
 			/*
 			 * Debug Function
 			 */
 //			String orgId = "64ebfa4b-454e-4db3-8f91-7db3e169a962";
-			String spaceICd = "26d52647-0c26-46d1-88c9-4dfab7773122";
+			String spaceIsd = "26d52647-0c26-46d1-88c9-4dfab7773122";
 
 			String url = srpName + "?orgId=" + orgId + "&spaceId=" + spaceId;
 
