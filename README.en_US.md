@@ -1,4 +1,6 @@
-﻿
+
+```
+
 # SSO Integration Example
 
 WISE-PaaS' support for SSO allows the users to access different applications with a one-time login.
@@ -21,6 +23,7 @@ Due to security concerns, the frontend application is not allowed to acquire thi
 
 ### [HTML & JavaScript]
 #### Step 1. Create index.html, declare variables and import jQuery
+```
 ```
 <html>
 <head>
@@ -179,3 +182,4 @@ $ cf push {name of app} -m 512M -p build/libs/backend-1.0.0.jar -b java_buildpac
 For more information on how to deploy app, please see:
 https://github.com/cloudfoundry/java-buildpack
 https://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
+
