@@ -2,7 +2,11 @@
 <classpath>
 	<classpathentry kind="src" path="backend/src/main/java"/>
 	<classpathentry kind="src" path="backend/src/test/java"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/home/bee/Code/jva/SSOIntegrationSampleCode/backend">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="backend/gradle/wrapper/gradle-wrapper.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="output" path="backend/bin"/>
 </classpath>
