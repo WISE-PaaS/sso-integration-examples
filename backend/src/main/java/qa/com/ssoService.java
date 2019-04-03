@@ -114,6 +114,7 @@ public class ssoService {
 				String role = arrNode.get("role").asText();
 				userName = arrNode.get("firstName").asText();
 
+				/* verification of OrgID for tenant */
 				if (role.equalsIgnoreCase(role_tenant)) {
 					ArrayNode userOrgIdNode = tokenInfo.withArray("groups");
 
@@ -132,6 +133,7 @@ public class ssoService {
 					}
 
 				} else {
+					/* verification of srpId for other users */
 					if (SSO.srpId == null) {
 
 						if (!SSO.recvSrpIdAndSecret()) {
@@ -229,7 +231,8 @@ public class ssoService {
 			JsonNode tokenInfo = new ObjectMapper().readValue(decodeStr, JsonNode.class);
 
 			String role = tokenInfo.get("role").asText();
-
+			
+			/* verification of OrgID for tenant */
 			if (role.equalsIgnoreCase(role_tenant)) {
 				String userOrgId = tokenInfo.withArray("groups").get(0).textValue();
 				String orgId = System.getenv("org_id");
@@ -246,6 +249,7 @@ public class ssoService {
 				}
 
 			} else {
+				/* verification of srpId for other users */
 				if (SSO.srpId == null) {
 					if (!SSO.recvSrpIdAndSecret()) {
 						res.setErrorDescription(RESP_SRPIDFAILED);
