@@ -20,17 +20,16 @@ public class retryDBConnection {
 	 * CONSTANT VARIABLE FOR @RETRYABLE
 	 */
 
-	final long startDelay = 1000;
+	final long startDelay = 2 * 1000;
 	final int maxAttempts = 10000;
-	final long maxDelay = 1000;
+	final long maxDelay = 60 * 60 * 1000;
 	final double multiplier = 2;
 
 	/*
 	 * CONSTANT VARIABLE JDBC ERROR CODE
 	 */
 	final int CANNOT_ACQUIRE_DATA_SOURCE = 7060;
-		
-			
+
 	int i = 1;
 
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(retryDBConnection.class);
@@ -49,7 +48,7 @@ public class retryDBConnection {
 			LOGGER.info("Connection Established!");
 
 		} catch (SQLException e) {
-		
+
 			switch (e.getErrorCode()) {
 			case CANNOT_ACQUIRE_DATA_SOURCE:
 				getRecoveryStatus();

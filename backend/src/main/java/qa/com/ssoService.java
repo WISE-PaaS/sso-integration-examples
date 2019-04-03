@@ -15,7 +15,7 @@ import java.util.List;
 import javax.servlet.http.Cookie;
 
 import org.apache.tomcat.util.codec.binary.Base64;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 
 import org.springframework.http.HttpEntity;
@@ -41,6 +41,7 @@ import qa.com.classDefinition.PatchUserRes;
 import qa.com.classDefinition.ResponseCookie;
 import qa.com.classDefinition.User;
 import qa.com.db.PostgreSql;
+import qa.com.ssoSubMethod;
 
 @AutoConfigurationPackage
 @Service
@@ -79,7 +80,7 @@ public class ssoService {
 		}
 	}
 
-	@Autowired
+//	@Autowired
 	private ssoSubMethod SSO;
 
 	public ResponseCookie doLogin(ObjectNode content) throws Exception {
@@ -104,6 +105,7 @@ public class ssoService {
 				return res;
 
 			} else {
+				
 				String accessToken = responseNode.get("accessToken").toString();
 				String[] tokenSplit = accessToken.split("\\.");
 				String decodeStr = new String(Base64.decodeBase64(tokenSplit[1]), "UTF-8");
@@ -114,8 +116,12 @@ public class ssoService {
 				String role = arrNode.get("role").asText();
 				userName = arrNode.get("firstName").asText();
 
+				System.out.println(tokenInfo);
+				
 				/* verification of OrgID for tenant */
 				if (role.equalsIgnoreCase(role_tenant)) {
+					
+					System.out.println("erification of OrgID for tenant");
 					ArrayNode userOrgIdNode = tokenInfo.withArray("groups");
 
 					String orgId = System.getenv("org_id");
@@ -124,9 +130,10 @@ public class ssoService {
 					for (JsonNode node : userOrgIdNode) {
 						userOrgId.add(node.asText());
 					}
-
+					System.out.println("userOrgId");
 					if (!userOrgId.contains(orgId)) {
 
+						System.out.println("!userOrgId.contains");
 						loginRes.setErrorDescription(RESP_UNAUTHORIZED);
 						res.setStrJson(mapper.writeValueAsString(loginRes));
 						return res;
@@ -152,6 +159,7 @@ public class ssoService {
 					for (int i = 0; i < scopes.size(); i++) {
 
 						String strScope = scopes.get(i).toString();
+						System.out.println("strScope :"+strScope);
 						String[] eachScope = strScope.split("\\.");
 						if (eachScope[0].equalsIgnoreCase(SSO.srpId)) {
 							flag = true;

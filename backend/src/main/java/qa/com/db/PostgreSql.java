@@ -26,7 +26,7 @@ import qa.com.classDefinition.UserInfo;
  */
 
 @SpringBootApplication
-@Configuration
+//@Configuration
 public class PostgreSql {
 
 	/**
