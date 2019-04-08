@@ -9,7 +9,7 @@ import java.sql.Statement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import qa.com.classDefinition.User;
 import qa.com.classDefinition.UserInfo;
@@ -27,6 +27,7 @@ import qa.com.classDefinition.UserInfo;
 
 @SpringBootApplication
 //@Configuration
+@Component
 public class PostgreSql {
 
 	/**
@@ -36,8 +37,8 @@ public class PostgreSql {
 	@Autowired
 	private retryDBConnection retryConnection;
 
-
-	public Connection getConn(String url, String username, String password) throws SQLException, ClassNotFoundException {
+	public Connection getConn(String url, String username, String password)
+			throws SQLException, ClassNotFoundException {
 		String driver = "org.postgresql.Driver";
 		Connection conn = null;
 		try {
@@ -47,7 +48,7 @@ public class PostgreSql {
 		} catch (ClassNotFoundException e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
-		
+
 		} catch (SQLException e) {
 			conn = retryConnection.getConnect(driver, url, username, password);
 		}
@@ -127,6 +128,5 @@ public class PostgreSql {
 		}
 		return users;
 	}
-
 
 }

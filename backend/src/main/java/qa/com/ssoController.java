@@ -34,7 +34,6 @@ public class ssoController {
 
 	@Autowired
 	private ssoService ssoService;
-
 	@Autowired
 	private ObjectMapper objMapper;
 	@Autowired
@@ -44,11 +43,13 @@ public class ssoController {
 
 	@RequestMapping(method = RequestMethod.GET, value = "/users/me")
 	public ResponseEntity<ObjectNode> getTokenUser(@RequestParam(value = "username", required = true) String username,
-			@RequestParam(value = "password", required = true) String password) {
-		ObjectNode auth = objMapper.createObjectNode().put("username", username).put("password", password);
-		ObjectNode tokenPackage = ssoService.getToken(auth);
+			@RequestParam(value = "password", required = true) String password) throws Exception {
+
+		ObjectNode tokenPackage = ssoService
+				.getToken(objMapper.createObjectNode().put("username", username).put("password", password));
 		ObjectNode tokenPayload = objMapper.createObjectNode().put("token", tokenPackage.get("refreshToken").asText());
 		tokenPackage = ssoService.refreshToken(tokenPayload);
+
 		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(tokenPackage.get("accessToken").asText()),
 				HttpStatus.OK);
 	}
@@ -80,6 +81,7 @@ public class ssoController {
 			response.addCookie(getLoginToken.getCookie2());
 		}
 		ObjectNode json = new ObjectMapper().readValue(getLoginToken.getStrJson(), ObjectNode.class);
+
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
@@ -89,6 +91,7 @@ public class ssoController {
 			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
 
 		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
+
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
@@ -98,6 +101,7 @@ public class ssoController {
 			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
 
 		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
+
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
@@ -106,6 +110,7 @@ public class ssoController {
 	public ResponseEntity<ObjectNode> userList() throws Exception {
 
 		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
+
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
@@ -115,11 +120,13 @@ public class ssoController {
 			throws Exception {
 
 		ObjectNode res = new ObjectMapper().convertValue(ssoService.doLoginByToken(EIToken), ObjectNode.class);
+
 		return new ResponseEntity<ObjectNode>(res, HttpStatus.ACCEPTED);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/logout")
 	public ResponseEntity<ResponseCookie> doLogout() throws Exception {
+		
 		return new ResponseEntity<ResponseCookie>(ssoService.doLogout(), HttpStatus.ACCEPTED);
 	}
 
