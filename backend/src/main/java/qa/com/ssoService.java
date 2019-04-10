@@ -74,6 +74,22 @@ public class ssoService {
 		return restTemplate.exchange(apiUrl, HttpMethod.GET, entity, ObjectNode.class).getBody();
 
 	}
+	
+	public ObjectNode getParams() throws Exception {
+
+		LOGGER.info("Initiate getSRPToken.srpToken");
+
+		String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/params");
+		HttpHeaders headers = new HttpHeaders();
+		HttpEntity<ObjectNode> entity = new HttpEntity<ObjectNode>(headers);
+		RestTemplate restTemplate = new RestTemplate();
+
+		LOGGER.info("getParams success");
+
+		return restTemplate.exchange(apiUrl, HttpMethod.GET, entity, ObjectNode.class).getBody();
+
+	}
+
 
 	@Autowired
 	private ssoSubMethod SSO;

@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.ResponseCookie;
-import qa.com.classDefinition.UserRoleByScopes;
 import qa.com.classDefinition.loginInput;
 import qa.com.db.PostgreSql;
 
@@ -62,6 +61,12 @@ public class ssoController {
 			throws Exception {
 
 		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
+	}
+
+	@RequestMapping(method = RequestMethod.GET, value = "/params")
+	public ResponseEntity<ObjectNode> getParams() throws Exception {
+
+		return new ResponseEntity<ObjectNode>(ssoService.getParams(), HttpStatus.ACCEPTED);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/test")
