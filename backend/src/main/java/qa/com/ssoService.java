@@ -34,12 +34,14 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.jsonwebtoken.Claims;
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.LoginRes;
 import qa.com.classDefinition.PCFUtil;
 import qa.com.classDefinition.PatchUserRes;
 import qa.com.classDefinition.ResponseCookie;
 import qa.com.classDefinition.User;
+import qa.com.classDefinition.UserRoleByScopes;
 import qa.com.db.PostgreSql;
 import qa.com.ssoSubMethod;
 
@@ -47,18 +49,11 @@ import qa.com.ssoSubMethod;
 @Component
 public class ssoService {
 
-	final String RESP_UNAUTHORIZED = "unauthorized";
+	final String RESP_AUTHORIZED = "Authorized";
+	final String RESP_UNAUTHORIZED = "Unauthorized";
 	final String RESP_SRPIDFAILED = "get srp id failed";
-
-	/*
-	 * VARIABLE FOR ROLES. BE AWARE THAT ALL CHARACTERS ARE INTENTIONALLY CONVERT TO
-	 * LOWERCASE !
-	 */
-
-	final String role_tenant = "tenant";
-	final String role_admin = "admin";
-	final String role_srpUser = "srpuser";
-	final String role_developer = "developer";
+	final String RESP_TOKEN_NOT_FOUND = "EIToken not found";
+	final String RESP_TOKEN_EXPIRED = "EIToken expired";
 
 	public static final String SSO_API_ENDPOINT = "https://portal-sso.ali.wise-paas.com.cn/v2.0";
 
@@ -66,24 +61,18 @@ public class ssoService {
 
 	public ObjectNode getSRPToken(String srpToken, String endPointUrl) throws Exception {
 
-		try {
-			LOGGER.info("Initiate getSRPToken.srpToken");
+		LOGGER.info("Initiate getSRPToken.srpToken");
 
-			String apiUrl = String.format("%s%s/%s", SSO_API_ENDPOINT, "/srps", endPointUrl);
-			HttpHeaders headers = new HttpHeaders();
-			headers.set("X-Auth-SRPToken", String.format("%s", srpToken));
-			HttpEntity<ObjectNode> entity = new HttpEntity<ObjectNode>(headers);
-			RestTemplate restTemplate = new RestTemplate();
+		String apiUrl = String.format("%s%s/%s", SSO_API_ENDPOINT, "/srps", endPointUrl);
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-Auth-SRPToken", String.format("%s", srpToken));
+		HttpEntity<ObjectNode> entity = new HttpEntity<ObjectNode>(headers);
+		RestTemplate restTemplate = new RestTemplate();
 
-			LOGGER.info("getSRPToken.srpToken success");
+		LOGGER.info("getSRPToken.srpToken success");
 
-			return restTemplate.exchange(apiUrl, HttpMethod.GET, entity, ObjectNode.class).getBody();
+		return restTemplate.exchange(apiUrl, HttpMethod.GET, entity, ObjectNode.class).getBody();
 
-		} catch (Exception e) {
-			// TODO: handle exception
-			System.out.println(e.getMessage());
-			return null;
-		}
 	}
 
 	@Autowired
@@ -112,152 +101,72 @@ public class ssoService {
 				loginRes.setErrorDescription(responseNode.get("error").toString());
 
 				res.setStrJson(mapper.writeValueAsString(loginRes));
-				mapper.readValue(res.getStrJson(), ObjectNode.class);
 				return res;
 
 			} else {
-				LOGGER.info(" initiate doLogin.getToken 'else' - responseNode has no error ");
+
+				LOGGER.info("initiate doLogin.getToken 'else' - responseNode has no error ");
+				String cfApi = SSO.recvApplicationEvn("cf_api");
+				String domain = cfApi.substring(cfApi.indexOf("api.") + 4);
 
 				String accessToken = responseNode.get("accessToken").toString();
 				String[] tokenSplit = accessToken.split("\\.");
+				System.out.println("tokensplit" + tokenSplit);
+
 				String decodeStr = new String(Base64.decodeBase64(tokenSplit[1]), "UTF-8");
 
-				ObjectNode tokenInfo = new ObjectMapper().readValue(decodeStr, ObjectNode.class);
+				UserRoleByScopes roleAccess = SSO.getUserRoleByScopes(decodeStr);
 
-				final JsonNode arrNode = new ObjectMapper().readTree(decodeStr);
-				String role = arrNode.get("role").asText();
-				userName = arrNode.get("firstName").asText();
+				if (Boolean.logicalAnd(roleAccess.isLoginFlag(), true)) {
+					EIToken = responseNode.get("accessToken").toString();
+					loginRes.setAccessToken(EIToken);
+					loginRes.setRefreshToken(responseNode.get("refreshToken").toString());
+					loginRes.setTokenType(responseNode.get("tokenType").toString());
 
-				System.out.println(tokenInfo);
+					LOGGER.info(domain);
+					Cookie cookie1 = new Cookie("EIToken", EIToken);
+					cookie1.setDomain(domain);
+					cookie1.setMaxAge(60 * 60);
+					cookie1.setPath("/");
+					cookie1.setSecure(true);
+					cookie1.setHttpOnly(true);
 
-				LOGGER.info("doLogin.getToken 'else' success ");
-				/* verification of OrgID for tenant */
-				if (role.equalsIgnoreCase(role_tenant)) {
+					Cookie cookie2 = new Cookie("EIName", userName);
+					cookie2.setDomain(domain);
+					cookie2.setMaxAge(60 * 60);
+					cookie2.setPath("/");
+					cookie2.setSecure(true);
 
-					LOGGER.info("doLogin.role 'if' has tenant ");
+					res.setStrJson(mapper.writeValueAsString(loginRes));
+					res.setCookie1(cookie1);
+					res.setCookie2(cookie2);
 
-//					System.out.println("Verification of OrgID for tenant");
-					ArrayNode userOrgIdNode = tokenInfo.withArray("groups");
-
-					String orgId = System.getenv("org_id");
-
-					List<String> userOrgId = new ArrayList<>();
-					for (JsonNode node : userOrgIdNode) {
-						userOrgId.add(node.asText());
-					}
-//					System.out.println("userOrgId");
-
-					if (!userOrgId.contains(orgId)) {
-
-						LOGGER.info("doLogin.userOrgId 'if' is false ");
-
-						loginRes.setErrorDescription(RESP_UNAUTHORIZED);
-						res.setStrJson(mapper.writeValueAsString(loginRes));
-						return res;
-					}
-
-					LOGGER.info("doLogin.userOrgId 'if' contains orgId ");
-
-				} else {
-
-					LOGGER.info("doLogin.role 'if' is not tenant");
-
-					/* verification of srpId for other users */
-					if (SSO.srpId == null) {
-
-						LOGGER.info("doLogin.SSO.srpId 'else' is null");
-
-						if (!SSO.recvSrpIdAndSecret()) {
-
-							LOGGER.info("doLogin.SSO.recvSrpIdAndSecret 'if' is false");
-
-							loginRes.setErrorDescription(RESP_SRPIDFAILED);
-							res.setStrJson(mapper.writeValueAsString(loginRes));
-
-							return res;
-						}
-					}
-
-					LOGGER.info("doLogin.SSO.srpId 'else' is not null");
-
-					boolean flag = false;
-
-					ArrayNode scopes = tokenInfo.withArray("scopes");
-					for (int i = 0; i < scopes.size(); i++) {
-
-						LOGGER.info("doLogin.scopes loop attempt  " + i + "/" + scopes.size());
-
-						String strScope = scopes.get(i).toString();
-						String[] eachScope = strScope.split("\\.");
-						if (eachScope[0].equalsIgnoreCase(SSO.srpId)) {
-
-							LOGGER.info("doLogin.scopes flag is true");
-
-							flag = true;
-						}
-					}
-					if (flag == false) {
-
-						LOGGER.info("doLogin.scopes flag is false");
-
-						loginRes.setErrorDescription(RESP_UNAUTHORIZED);
-						res.setStrJson(mapper.writeValueAsString(loginRes));
-
-						return res;
-					}
+					loginRes.setErrorDescription(roleAccess.getDesc());
+					res.setStrJson(mapper.writeValueAsString(loginRes));
+					return res;
 				}
-			}
-			EIToken = responseNode.get("accessToken").toString();
-			loginRes.setAccessToken(EIToken);
-			loginRes.setRefreshToken(responseNode.get("refreshToken").toString());
-			loginRes.setTokenType(responseNode.get("tokenType").toString());
 
-			LOGGER.info("doLogin.getToken success");
+				loginRes.setErrorDescription(roleAccess.getDesc());
+				res.setStrJson(mapper.writeValueAsString(loginRes));
+
+				return res;
+			}
+
 		} catch (Exception e) {
 			// TODO: handle exception
 			loginRes.setErrorDescription(e.getMessage());
-
 			res.setStrJson(mapper.writeValueAsString(loginRes));
 			return res;
 
 		}
 
-		String cfApi = SSO.recvApplicationEvn("cf_api");
-
-		/*
-		 * DEBUG
-		 */
-//		String cfApi = "https://api.wise-paas.com";
-
-		String domain = cfApi.substring(cfApi.indexOf("api.") + 4);
-
-		Cookie cookie1 = new Cookie("EIToken", EIToken);
-		cookie1.setDomain(domain);
-		cookie1.setMaxAge(60 * 60);
-		cookie1.setPath("/");
-		cookie1.setSecure(true);
-		cookie1.setHttpOnly(true);
-
-		Cookie cookie2 = new Cookie("EIName", userName);
-		cookie2.setDomain(domain);
-		cookie2.setMaxAge(60 * 60);
-		cookie2.setPath("/");
-		cookie2.setSecure(true);
-
-		res.setStrJson(mapper.writeValueAsString(loginRes));
-		res.setCookie1(cookie1);
-		res.setCookie2(cookie2);
-
-		LOGGER.info("doLogin success");
-
-		return res;
-
 	}
 
-	public LoginRes doLoginByToken(String EIToken) throws Exception {
+	public LoginRes doLoginByToken(String EIToken, String refreshToken) throws Exception {
+
 		LOGGER.info("initiate doLoginByToken");
 
-		LoginRes res = new LoginRes();
+		LoginRes loginRes = new LoginRes();
 
 		try {
 
@@ -265,102 +174,47 @@ public class ssoService {
 
 				LOGGER.info("doLoginByToken.EIToken is empty");
 
-				res.setErrorDescription("EITokennotfound");
-				return res;
+				loginRes.setErrorDescription(RESP_TOKEN_NOT_FOUND);
+				return loginRes;
 
 			} else if (!SSO.doValidateToken(EIToken)) {
 
-				LOGGER.info("doLoginByToken.doValidateToken is false");
-
-				ObjectMapper mapp = new ObjectMapper();
-				ObjectNode json = mapp.createObjectNode();
-				json.put("token", EIToken);
-
-				LOGGER.info("initiate doLoginByToken.refreshToken");
-				refreshToken(json);
-				LOGGER.info("doLoginByToken.refreshToken success");
+				LOGGER.info("doLoginByToken.doValidateToken is false - initiate logout");
+				doLogout();
+				loginRes.setErrorDescription(RESP_TOKEN_EXPIRED);
+				return loginRes;
 
 			}
+
+			ObjectMapper mapp = new ObjectMapper();
+			ObjectNode json = mapp.createObjectNode();
+			json.put("token", refreshToken);
+			LOGGER.info("initiate doLoginByToken.refreshToken");
+			refreshToken(json);
+			LOGGER.info("doLoginByToken.refreshToken success");
 
 			String[] tokenSplit = EIToken.split("\\.");
 			String decodeStr = new String(Base64.decodeBase64(tokenSplit[1]), "UTF-8");
-			JsonNode tokenInfo = new ObjectMapper().readValue(decodeStr, JsonNode.class);
 
-			String role = tokenInfo.get("role").asText();
+			UserRoleByScopes roleAccess = SSO.getUserRoleByScopes(decodeStr);
 
-			/* verification of OrgID for tenant */
-			if (role.equalsIgnoreCase(role_tenant)) {
+			if (Boolean.logicalAnd(roleAccess.isLoginFlag(), true)) {
 
-				LOGGER.info("doLoginByToken.role 'if' has tenant ");
-
-				String userOrgId = tokenInfo.withArray("groups").get(0).textValue();
-				String orgId = System.getenv("org_id");
-
-				/*
-				 * DEBUG
-				 */
-//				String orgId = "64ebfa4b-454e-4db3-8f91-7db3e169a962";
-
-				if (!userOrgId.equalsIgnoreCase(orgId)) {
-
-					LOGGER.info("doLoginByToken.userOrgId 'if' is false ");
-
-					res.setErrorDescription(RESP_UNAUTHORIZED);
-					return res;
-				}
-
-			} else {
-				/* verification of srpId for other users */
-				if (SSO.srpId == null) {
-
-					LOGGER.info("doLoginByToken.SSO.srpId  'if' is null ");
-
-					if (!SSO.recvSrpIdAndSecret()) {
-
-						LOGGER.info("doLoginByToken.SSO.recvSrpIdAndSecret  'if' is false ");
-
-						res.setErrorDescription(RESP_SRPIDFAILED);
-						return res;
-					}
-				}
-
-				boolean flag = false;
-
-				JsonNode scopes = tokenInfo.withArray("scopes");
-
-				for (int i = 0; i < scopes.size(); i++) {
-
-					LOGGER.info("doLoginByToken.scopes loop attempt  " + i + "/" + scopes.size());
-
-					String strScope = scopes.get(i).toString();
-					String[] eachScope = strScope.split("\\.");
-					if (eachScope[0].equalsIgnoreCase(SSO.srpId)) {
-
-						LOGGER.info("doLoginByToken.scopes flag is true");
-
-						flag = true;
-					}
-				}
-				if (flag == false) {
-
-					LOGGER.info("doLoginByToken.scopes flag is false");
-
-					res.setErrorDescription(RESP_UNAUTHORIZED);
-					return res;
-				}
+				loginRes.setErrorDescription(roleAccess.getDesc());
+				return loginRes;
 			}
-
 		} catch (Exception e) {
 			// TODO: handle exception
 			LOGGER.warn(e.toString());
-			res.setErrorDescription(e.getMessage());
-			return res;
+
+			loginRes.setErrorDescription(e.getMessage());
+			return loginRes;
 
 		}
 
 		LOGGER.info("doLoginByToken success");
 
-		return res;
+		return loginRes;
 	}
 
 	public String patchUser(String EIToken, ObjectNode conJson) throws Exception {
@@ -371,7 +225,12 @@ public class ssoService {
 		try {
 
 			email = conJson.get("email").textValue();
-			if (SSO.srpId == null) {
+
+			/*
+			 * If SSO.srpId contains null, method will throws error, therefore errorHandler
+			 * for string null in SSO.srpID should be empty string -> \""
+			 */
+			if (SSO.srpId.equals("")) {
 				if (!SSO.recvSrpIdAndSecret()) {
 					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
 					return patchUserRes.toString();
@@ -430,7 +289,7 @@ public class ssoService {
 		try {
 
 			email = conJson.get("email").textValue();
-			if (SSO.srpId == null) {
+			if (SSO.srpId.equals("")) {
 				if (!SSO.recvSrpIdAndSecret()) {
 					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
 					return patchUserRes.toString();
@@ -467,10 +326,6 @@ public class ssoService {
 			return patchUserRes.toString();
 		}
 		PCFUtil.GetPostgresEnv();
-		/*
-		 * PostgreSql library is not present on this code. No PostgreSql library on old
-		 * version of SsoService also.
-		 */
 
 		PostgreSql sql = new PostgreSql();
 		sql.deleteUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
@@ -547,19 +402,14 @@ public class ssoService {
 	}
 
 	public ObjectNode validateToken(ObjectNode json) throws Exception {
-		try {
 
-			String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/tokenvalidation");
-			RestTemplate restTemplate = new RestTemplate();
+		String apiUrl = String.format("%s%s", SSO_API_ENDPOINT, "/tokenvalidation");
+		RestTemplate restTemplate = new RestTemplate();
 
-			RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(json, HttpMethod.POST, URI.create(apiUrl));
+		RequestEntity<ObjectNode> req = new RequestEntity<ObjectNode>(json, HttpMethod.POST, URI.create(apiUrl));
 
-			return restTemplate.exchange(req, ObjectNode.class).getBody();
-		} catch (Exception e) {
+		return restTemplate.exchange(req, ObjectNode.class).getBody();
 
-			// TODO: handle exception
-			return null;
-		}
 	}
 
 	public ObjectNode getToken(ObjectNode auth) {

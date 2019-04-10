@@ -7,8 +7,10 @@
 
 package qa.com;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.ResponseCookie;
+import qa.com.classDefinition.UserRoleByScopes;
 import qa.com.classDefinition.loginInput;
 import qa.com.db.PostgreSql;
 
@@ -62,9 +65,10 @@ public class ssoController {
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/test")
-	public ResponseEntity<String> noupdate() throws ClassNotFoundException, SQLException {
+	public ResponseEntity<String> noupdate(HttpServletRequest req, HttpServletResponse resp)
+			throws ClassNotFoundException, SQLException, IOException {
 
-		postgres.getConn("jdbc:mysql://localhost/test", "username", "password");
+//		postgres.getConn("jdbc:mysql://localhost/test", "username", "password");
 
 		return new ResponseEntity<String>("OK", HttpStatus.ACCEPTED);
 	}
@@ -116,17 +120,18 @@ public class ssoController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
-	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken)
-			throws Exception {
+	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,
+			@CookieValue(value = "refreshToken", required = true) String refreshToken) throws Exception {
 
-		ObjectNode res = new ObjectMapper().convertValue(ssoService.doLoginByToken(EIToken), ObjectNode.class);
+		ObjectNode res = new ObjectMapper().convertValue(ssoService.doLoginByToken(EIToken, refreshToken),
+				ObjectNode.class);
 
 		return new ResponseEntity<ObjectNode>(res, HttpStatus.ACCEPTED);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/logout")
 	public ResponseEntity<ResponseCookie> doLogout() throws Exception {
-		
+
 		return new ResponseEntity<ResponseCookie>(ssoService.doLogout(), HttpStatus.ACCEPTED);
 	}
 
@@ -134,7 +139,7 @@ public class ssoController {
 	 * Testing request
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/test")
-	public ResponseEntity<loginInput> update(@RequestBody loginInput linput) {
+	public ResponseEntity<loginInput> update(@RequestBody loginInput linput) throws IOException {
 
 		if (linput != null) {
 			linput.setUsername("aa");

@@ -1,0 +1,180 @@
+#forgetpwd-username {
+  margin: 0 auto;
+  border-radius: 0px;
+  border-color: #C2C2C2;
+  border-width: 2px 2px 1px 2px;  
+}
+
+#forgetpwd-username:focus {
+  border: solid #99CAFF;
+  border-width: 2px 2px 1px 2px;
+  color: #000000;
+}
+
+#login-phone {
+  margin: 0 auto;
+  border-radius: 0px;
+  border-color: #C2C2C2;
+  border-width: 1px 2px 2px 2px;
+}
+
+#login-phone:focus {
+  border: solid #99CAFF;
+  border-width: 1px 2px 2px 2px;
+  color: #000000;
+}
+
+#forgetpwd-btn {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  cursor: pointer; 
+  position: absolute; 
+  background-color: #40506f; 
+  font-family: NotoSans; 
+  color: #FEFEFE;
+}
+
+@media (max-width: 424px) {
+  #forgetpwd-username, #login-phone {
+    width: 336px;
+    height: 40px;
+  }
+
+  #forgetpwd-btn {
+    right: 19.5px;
+    top: 409px;
+    width: 227px;
+    height: 41.5px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 1.128em;
+  }
+}
+
+@media (max-width: 320px) {
+  #forgetpwd-username, #login-phone {
+    width: 241.92px;
+    height: 28.8px;
+  }
+
+  #forgetpwd-btn {
+    right: 14.04px;
+    top: 294.48px;
+    width: 163.44px;
+    height: 29.88px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 0.9em;
+  }
+}
+
+
+@media (min-width: 425px) and (max-width: 767px) {
+  #forgetpwd-username, #login-phone {
+    width: 390.76px;
+    height: 49.98px;
+  }
+
+  #forgetpwd-btn {
+    right: 16.92px;
+    top: 463.56px;
+    width: 264.44px;
+    height: 48.8px;    
+  }
+
+  #forgetpwd-btn span {
+    font-size: 1.344em;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #forgetpwd-username, #login-phone {
+    width: 256px;
+    height: 32px;
+  }
+
+  #forgetpwd-btn {
+    right: 27px;
+    top: 292px;
+    width: 170px;
+    height: 32px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 0.9em;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+  #forgetpwd-username, #login-phone {
+    width: 256px;
+    height: 32px;
+  }
+
+  #forgetpwd-btn {
+    right: 27px;
+    top: 292px;
+    width: 182px;
+    height: 32px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 0.9em;
+  }
+}
+
+@media (min-width: 1440px) and (max-width: 2559px) {
+  #forgetpwd-username, #login-phone {
+    width: 320px;
+    height: 40px;
+  }
+
+  #forgetpwd-btn {
+    right: 26px;
+    top: 352px;
+    width: 214px;
+    height: 40px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 1.14em;
+  }
+}
+
+@media (min-width: 2560px) {
+  #forgetpwd-username, #login-phone {
+    width: 512px;
+    height: 64px;
+  }
+
+  #forgetpwd-btn {
+    right: 54px;
+    top: 570px;
+    width: 342.4px;
+    height: 64px;
+  }
+
+  #forgetpwd-btn span {
+    font-size: 1.728em;
+  }
+}
+
+input[title*="Email"].phone-invalid {
+  border-top-color: #E6757B !important;
+  border-right-color: #E6757B !important;
+  border-left-color: #E6757B !important;
+}
+
+input[title*="Phone"].phone-invalid {
+  border-bottom-color: #E6757B !important;
+  border-right-color: #E6757B !important;
+  border-left-color: #E6757B !important;
+}

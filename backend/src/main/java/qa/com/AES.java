@@ -5,9 +5,11 @@ import java.util.Optional;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+
 public class AES {
 
 	public static Optional<byte[]> Encrypt(String sSrc, String sKey) throws Exception {
+
 		if (sKey == null) {
 			System.out.println("key is null");
 			return Optional.empty();
@@ -24,5 +26,9 @@ public class AES {
 
 		return Optional.of(cipher.doFinal(sSrc.getBytes("UTF-8")));
 	}
+	
+	
+	
+	
 
 }

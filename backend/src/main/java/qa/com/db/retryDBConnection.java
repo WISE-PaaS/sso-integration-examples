@@ -3,6 +3,7 @@
 */
 package qa.com.db;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -21,9 +22,9 @@ public class retryDBConnection {
 	 */
 
 	final long startDelay = 2 * 1000;
-	final int maxAttempts = 10000;
+	final int maxAttempts = 3600;
 	final long maxDelay = 60 * 60 * 1000;
-	final double multiplier = 2;
+	final double multiplier = 2.0;
 
 	/*
 	 * CONSTANT VARIABLE JDBC ERROR CODE
@@ -36,13 +37,14 @@ public class retryDBConnection {
 
 	@Retryable(value = {
 			SQLException.class }, maxAttempts = maxAttempts, backoff = @Backoff(delay = startDelay, maxDelay = maxDelay, multiplier = multiplier))
-	public Connection getConnect(String driver, String url, String username, String password)
-			throws SQLException, ClassNotFoundException {
+	public synchronized Connection getConnect(String driver, String url, String username, String password)
+			throws SQLException, ClassNotFoundException, IOException {
+//		System.in.readAllBytes();
 
 		Class.forName(driver);
 		Connection conn = null;
 		try {
-			LOGGER.info("Connection Attempt = " + i++);
+			LOGGER.info("Connection Attempt = {}", i);
 			conn = (Connection) DriverManager.getConnection(url, username, password);
 
 			LOGGER.info("Connection Established!");
@@ -63,7 +65,7 @@ public class retryDBConnection {
 	}
 
 	@Recover
-	public static String getRecoveryStatus() {
+	public static synchronized String getRecoveryStatus() {
 		LOGGER.info("SSO_dbConnection.recover");
 		return "Recovered from NullPointer Exception. Can't re-establish connection to DB";
 	}

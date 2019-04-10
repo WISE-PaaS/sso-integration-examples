@@ -1,6 +1,7 @@
 
 package qa.com.db;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -38,7 +39,7 @@ public class PostgreSql {
 	private retryDBConnection retryConnection;
 
 	public Connection getConn(String url, String username, String password)
-			throws SQLException, ClassNotFoundException {
+			throws SQLException, ClassNotFoundException, IOException {
 		String driver = "org.postgresql.Driver";
 		Connection conn = null;
 		try {

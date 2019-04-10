@@ -1,0 +1,13 @@
+---  
+applications:   
+- name: ssov3
+  memory: 1024M 
+  disk_quota: 1024M 
+  instances: 1
+  buildpacks: 
+    - Java_v4-12
+  path: backend/build/libs/sso-1.0.0.jar
+  env:      
+    org_id: 64ebfa4b-454e-4db3-8f91-7db3e169a962
+ 
+

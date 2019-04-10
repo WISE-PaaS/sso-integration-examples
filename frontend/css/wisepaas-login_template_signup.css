@@ -1,0 +1,215 @@
+#login-username {
+    margin: 0 auto;
+    border-radius: 0px;
+    border-color: #C2C2C2;
+    border-width: 2px 2px 1px 2px;  
+}
+
+#login-username:focus {
+    border: solid #99CAFF;
+    border-width: 2px 2px 1px 2px;
+    color: #000000;
+}
+
+#loginname {
+    margin: 0 auto;
+    border-radius: 0px;
+    border-color: #C2C2C2;
+    border-width: 1px 2px 1px 2px;
+}
+
+#loginname:focus {
+    border: solid #99CAFF;
+    border-width: 1px 2px 1px 2px;
+    color: #000000;
+}
+
+#login-lastname {
+    margin: 0 auto;
+    border-radius: 0px;
+    border-color: #C2C2C2;
+    border-width: 1px 2px 1px 2px;
+}
+
+#login-lastname:focus {
+    border: solid #99CAFF;
+    border-width: 1px 2px 1px 2px;
+    color: #000000;
+}
+
+#login-phone {
+    margin: 0 auto;
+    border-radius: 0px;
+    border-color: #C2C2C2;
+    border-width: 1px 2px 2px 2px;
+}
+
+#login-phone:focus {
+    border: solid #99CAFF;
+    border-width: 1px 2px 2px 2px;
+    color: #000000;
+}
+
+#signup-btn {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    cursor: pointer; 
+    position: absolute; 
+    background-color: #40506f; 
+    font-family: NotoSans; 
+    color: #FEFEFE;
+}
+
+@media (max-width: 424px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 336px;
+        height: 40px;
+    }
+
+    #signup-btn {
+        right: 19.5px;
+        top: 489px;
+        width: 109px;
+        height: 41.5px;
+    }
+
+    #signup-btn span {
+        font-size: 1.128em;
+    }
+}
+
+@media (max-width: 320px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 241.92px;
+        height: 28.8px;
+    }
+
+    #signup-btn {
+        right: 14.04px;
+        top: 352.08px;
+        width: 78.48px;
+        height: 29.88px;
+    }
+
+    #signup-btn span {
+        font-size: 0.9em;
+    }
+}
+
+@media (min-width: 425px) and (max-width: 767px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 390.76px;
+        height: 49.98px;
+    }
+
+    #signup-btn {
+        right: 16.92px;
+        top: 563.52px;
+        width: 146.39px;
+        height: 48.8px;
+    }
+
+    #signup-btn span {
+        font-size: 1.344em;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 256px;
+        height: 32px;
+    }
+
+    #signup-btn {
+        right: 27px;
+        top: 356px;
+        width: 96px;
+        height: 32px;
+    }
+
+    #signup-btn span {
+        font-size: 0.9em;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 256px;
+        height: 32px;
+    }
+
+    #signup-btn {
+        right: 27px;
+        top: 356px;
+        width: 96px;
+        height: 32px;
+    }
+
+    #signup-btn span {
+        font-size: 0.9em;
+    }
+}
+
+@media (min-width: 1440px) and (max-width: 2559px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 320px;
+        height: 40px;
+    }
+
+    #signup-btn {
+        right: 26px;
+        top: 432px;
+        width: 120px;
+        height: 40px;
+    }
+
+    #signup-btn span {
+        font-size: 1.14em;
+    }
+}
+
+@media (min-width: 2560px) {
+    #login-username, #loginname, #login-lastname, #login-phone {
+        width: 512px;
+        height: 64px;
+    }
+
+    #signup-btn {
+        right: 54px;
+        top: 698px;
+        width: 192px;
+        height: 64px;
+    }
+
+    #signup-btn span {
+        font-size: 1.728em;
+    }
+}
+
+input[title*="Email"].phone-invalid {
+    border-top-color: #E6757B !important;
+    border-right-color: #E6757B !important;
+    border-left-color: #E6757B !important;
+}
+
+input[title*="First Name"].phone-invalid {
+    border-right-color: #E6757B !important;
+    border-left-color: #E6757B !important;
+}
+
+input[title*="Last Name"].phone-invalid {
+    border-right-color: #E6757B !important;
+    border-left-color: #E6757B !important;
+}
+  
+input[title*="Phone"].phone-invalid {
+    border-bottom-color: #E6757B !important;
+    border-right-color: #E6757B !important;
+    border-left-color: #E6757B !important;
+}
