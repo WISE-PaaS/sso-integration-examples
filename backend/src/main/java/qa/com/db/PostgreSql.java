@@ -8,12 +8,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Component;
 
 import qa.com.classDefinition.User;
 import qa.com.classDefinition.UserInfo;
+import qa.com.ssoException.CannotAcquireDataException;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -38,8 +41,8 @@ public class PostgreSql {
 	@Autowired
 	private retryDBConnection retryConnection;
 
-	public Connection getConn(String url, String username, String password)
-			throws SQLException, ClassNotFoundException, IOException {
+	public Connection getConn(HttpServletRequest req, String url, String username, String password)
+			throws SQLException, ClassNotFoundException, IOException, CannotAcquireDataException {
 		String driver = "org.postgresql.Driver";
 		Connection conn = null;
 		try {
@@ -51,16 +54,17 @@ public class PostgreSql {
 			e.printStackTrace();
 
 		} catch (SQLException e) {
-			conn = retryConnection.getConnect(driver, url, username, password);
+			conn = retryConnection.getConnect(req, driver, url, username, password);
+
 		}
 
 		return conn;
 	}
 
-	public void insertUser(String url, String dbusername, String dbpassword, String username) {
+	public void insertUser(HttpServletRequest req,String url, String dbusername, String dbpassword, String username) {
 
 		try {
-			Connection conn = getConn(url, dbusername, dbpassword);
+			Connection conn = getConn(req,url, dbusername, dbpassword);
 			Statement stmt = conn.createStatement();
 			// long time = new Date().getTime()/1000;
 
@@ -92,10 +96,10 @@ public class PostgreSql {
 		}
 	}
 
-	public void deleteUser(String url, String dbusername, String dbpassword, String username) {
+	public void deleteUser(HttpServletRequest req,String url, String dbusername, String dbpassword, String username) {
 		try {
 			String schemaName = "sample";
-			Connection conn = getConn(url, dbusername, dbpassword);
+			Connection conn = getConn(req,url, dbusername, dbpassword);
 			Statement stmt = conn.createStatement();
 			// long time = new Date().getTime()/1000;
 			String sql = String.format("delete from %s.sso_user where username = '%s'", schemaName, username);
@@ -107,11 +111,11 @@ public class PostgreSql {
 		}
 	}
 
-	public User getUserList(String url, String dbusername, String dbpassword) {
+	public User getUserList(HttpServletRequest req,String url, String dbusername, String dbpassword) {
 		User users = new User();
 		try {
 			String schemaName = "sample";
-			Connection conn = getConn(url, dbusername, dbpassword);
+			Connection conn = getConn(req, url, dbusername, dbpassword);
 			Statement stmt = conn.createStatement();
 			String sql = String.format("select * from %s.sso_user", schemaName);
 			ResultSet rs = stmt.executeQuery(sql);

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import qa.com.classDefinition.UserRoleByScopes;
+import qa.com.ssoException.CannotAcquireDataException;
 
 @Component
 public class ssoSubMethod {
@@ -48,6 +49,7 @@ public class ssoSubMethod {
 	private ssoService ssoService;
 
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ssoSubMethod.class);
+	private static final String VCAP_APPLICATION = "VCAP_APPLICATION";
 
 	public boolean recvSrpIdAndSecret() throws Exception {
 		LOGGER.info("Initiate recvSrpIdAndSecret");
@@ -125,45 +127,56 @@ public class ssoSubMethod {
 		return true;
 	}
 
-	public String recvSSOUrl() throws IOException {
+	public String recvSSOUrl() throws IOException, CannotAcquireDataException {
 		LOGGER.info("initiate recvSSOUrl");
 
 		String ssoUrl = null;
-		ssoUrl = System.getenv("sso_url");
-		if (ssoUrl.equals(null)) {
-			LOGGER.info("recvSSOUrl.ssoUrl is null");
-			String cfApi = recvApplicationEvn("cf_api");
-			/*
-			 * String orgName = System.getenv("org_name"); if
-			 * (orgName.equalsIgnoreCase("WISE-PaaS-Stage")) { return cfApi.replace("api",
-			 * "portal-sso-stage"); } else if (orgName.equalsIgnoreCase("WISE-PaaS-Dev")) {
-			 * return cfApi.replace("api", "portal-sso-develop"); } else { return
-			 * cfApi.replace("api", "portal-sso"); }
-			 */
-			return cfApi.replace("api", "portal-sso");
+
+		try {
+			ssoUrl = System.getenv("sso_url");
+			if (ssoUrl.equals(null)) {
+				LOGGER.info("recvSSOUrl.ssoUrl is null");
+				String cfApi = recvApplicationEvn("cf_api");
+				/*
+				 * String orgName = System.getenv("org_name"); if
+				 * (orgName.equalsIgnoreCase("WISE-PaaS-Stage")) { return cfApi.replace("api",
+				 * "portal-sso-stage"); } else if (orgName.equalsIgnoreCase("WISE-PaaS-Dev")) {
+				 * return cfApi.replace("api", "portal-sso-develop"); } else { return
+				 * cfApi.replace("api", "portal-sso"); }
+				 */
+				return cfApi.replace("api", "portal-sso");
+			}
+			LOGGER.info("recvSSOUrl success");
+			return ssoUrl;
+		} catch (Exception e) {
+			throw new CannotAcquireDataException(e.getMessage());
 		}
-		LOGGER.info("recvSSOUrl success");
-		return ssoUrl;
 	}
 
-	public String recvApplicationEvn(String key) throws IOException {
-		LOGGER.info("initiate recvApplicationEvn :" + key);
+	public String recvApplicationEvn(String key) throws IOException, CannotAcquireDataException {
+		try {
 
-		String app = System.getenv("VCAP_APPLICATION");
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode appJson = mapper.readTree(app);
+			LOGGER.info("initiate recvApplicationEvn :" + key);
 
-		LOGGER.info("recvApplicationEvn success :" + key);
+			String app = System.getenv(VCAP_APPLICATION);
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode appJson = mapper.readTree(app);
 
-		/*
-		 * Bugs: when using .toString() will return string include double quotes(")
-		 * Change: .textValue()
-		 */
+			LOGGER.info("recvApplicationEvn success :" + key);
 
-		return appJson.get(key).textValue();
+			/*
+			 * Bugs: when using .toString() will return string include double quotes(")
+			 * Change: .textValue()
+			 */
+
+			return appJson.get(key).textValue();
+		} catch (Exception e) {
+
+			throw new CannotAcquireDataException("failed to get environment " + VCAP_APPLICATION);
+		}
 	}
 
-	public String recvSrpToken() {
+	public String recvSrpToken() throws CannotAcquireDataException {
 		LOGGER.info("initiate recvSrpToken");
 
 		try {
@@ -188,10 +201,9 @@ public class ssoSubMethod {
 			return base64UrlStr;
 
 		} catch (Exception e) {
-			System.out.print(e.getMessage());
+			throw new CannotAcquireDataException(e.getMessage());
+
 		}
-		LOGGER.info("recvSrpToken success");
-		return null;
 	}
 
 	public boolean doValidateToken(String EIToken) throws Exception {
@@ -205,13 +217,15 @@ public class ssoSubMethod {
 
 		/* If token is expired will receive error in JSON response */
 		if (myNode.has("error")) {
-			
+
 			/* Initiate logout */
-			
+
 			return false;
 		}
 
-		/* If token is not expired but have minimum valid time, initiate refresh token */
+		/*
+		 * If token is not expired but have minimum valid time, initiate refresh token
+		 */
 		if (myNode.get("expiresIn").intValue() < tokenMinValidityTime) {
 
 			LOGGER.info("doValidateToken.tokenExpirationTime \"if\" token need to be refreshed");
@@ -220,135 +234,141 @@ public class ssoSubMethod {
 		}
 
 		LOGGER.info("doValidateToken success");
-		
+
 		return true;
 	}
 
 	public UserRoleByScopes getUserRoleByScopes(String decodeStr) throws Exception {
+		try {
+			/*
+			 * 1. If there is orgid in cfscope and the current org is the same, then need to
+			 * verify that the permission is tenant, if it is tenant, then the verification
+			 * ends, the user has the highest authority of the dashboard, both admin. 2. If
+			 * it is not tenant, then check if the user is developer. If it is developer,
+			 * then check if the space corresponding to developer is consistent with the
+			 * current space. If it is consistent, first give the user a minimum permission.
+			 * In the dashboard, use developer here. Distinguish as a sign. 3. Cfscope
+			 * traversal, if it is tenant, the verification is finished in the first step,
+			 * if not, then get the current app registered srpid, get the user’s permission
+			 * to the corresponding srpid app from the scope. (ps: For developer, if the
+			 * relevant permissions are not found in step 3, the second part also sets the
+			 * default viewer permissions for it) 4. Then give the permission to the user of
+			 * this operation.
+			 * 
+			 * In general, these verifications are done in the middleware of the filter, and
+			 * all authenticated interfaces need to be verified.
+			 */
 
-		/*
-		 * 1. If there is orgid in cfscope and the current org is the same, then need to
-		 * verify that the permission is tenant, if it is tenant, then the verification
-		 * ends, the user has the highest authority of the dashboard, both admin. 2. If
-		 * it is not tenant, then check if the user is developer. If it is developer,
-		 * then check if the space corresponding to developer is consistent with the
-		 * current space. If it is consistent, first give the user a minimum permission.
-		 * In the dashboard, use developer here. Distinguish as a sign. 3. Cfscope
-		 * traversal, if it is tenant, the verification is finished in the first step,
-		 * if not, then get the current app registered srpid, get the user’s permission
-		 * to the corresponding srpid app from the scope. (ps: For developer, if the
-		 * relevant permissions are not found in step 3, the second part also sets the
-		 * default viewer permissions for it) 4. Then give the permission to the user of
-		 * this operation.
-		 * 
-		 * In general, these verifications are done in the middleware of the filter, and
-		 * all authenticated interfaces need to be verified.
-		 */
+			LOGGER.info("initiate getUserRoleByScopes");
 
-		LOGGER.info("initiate getUserRoleByScopes");
+			UserRoleByScopes userRoleByScopes = new UserRoleByScopes();
+			userRoleByScopes.setRoleFlag(false);
 
-		UserRoleByScopes userRoleByScopes = new UserRoleByScopes();
-		userRoleByScopes.setRoleFlag(false);
+			final JsonNode arrNode = new ObjectMapper().readTree(decodeStr);
 
-		final JsonNode arrNode = new ObjectMapper().readTree(decodeStr);
+			JsonNode cfScope = arrNode.withArray("cfScopes");
 
-		JsonNode cfScope = arrNode.withArray("cfScopes");
+			System.out.println(cfScope);
+			String role = arrNode.get("role").asText();
 
-		System.out.println(cfScope);
-		String role = arrNode.get("role").asText();
+			/* Accessing object inside cfScope */
+			for (int i = 0; i < cfScope.size(); i++) {
 
-		/* Accessing object inside cfScope */
-		for (int i = 0; i < cfScope.size(); i++) {
+				LOGGER.info("ssoSubMethod 'for' Accessing object inside jsonArray");
 
-			LOGGER.info("ssoSubMethod 'for' Accessing object inside jsonArray");
+				/* Verified if current orgId equal with cfscope guid */
+				if (System.getenv("org_id").equalsIgnoreCase(arrNode.get("cfScopes").get(i).get("guid").asText())) {
 
-			/* Verified if current orgId equal with cfscope guid */
-			if (System.getenv("org_id").equalsIgnoreCase(arrNode.get("cfScopes").get(i).get("guid").asText())) {
+					/* Verified if role is tenant */
+					LOGGER.info("ssoSubMethod.userRoleByScopes 'if' verified if role is tenant ");
+					if (role.equalsIgnoreCase(role_tenant)) {
 
-				/* Verified if role is tenant */
-				LOGGER.info("ssoSubMethod.userRoleByScopes 'if' verified if role is tenant ");
-				if (role.equalsIgnoreCase(role_tenant)) {
+						LOGGER.info("ssoSubMethod.userRoleByScopes 'if'  role is tenant ");
+						userRoleByScopes.setDesc(RESP_AUTHORIZED);
+						userRoleByScopes.setLoginFlag(true);
+						return userRoleByScopes;
+					}
 
-					LOGGER.info("ssoSubMethod.userRoleByScopes 'if'  role is tenant ");
-					userRoleByScopes.setDesc(RESP_AUTHORIZED);
-					userRoleByScopes.setLoginFlag(true);
-					return userRoleByScopes;
+					LOGGER.info("ssoSubMethod.userRoleByScopes 'if'  role is NOT tenant ");
+					throw new CannotAcquireDataException(RESP_UNAUTHORIZED);
+//					userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
+//					userRoleByScopes.setLoginFlag(false);
+//					return userRoleByScopes;
 				}
 
-				LOGGER.info("ssoSubMethod.userRoleByScopes 'if'  role is NOT tenant ");
-				userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
-				userRoleByScopes.setLoginFlag(false);
-				return userRoleByScopes;
-			}
+				/* Verification of srpId for other users */
+				else if (srpId.equals(null)) {
 
-			/* Verification of srpId for other users */
-			else if (srpId.equals(null)) {
+					LOGGER.info("ssoSubMethod.srpId 'else' is null");
 
-				LOGGER.info("ssoSubMethod.srpId 'else' is null");
+					if (!recvSrpIdAndSecret()) {
 
-				if (!recvSrpIdAndSecret()) {
+						LOGGER.info("ssoSubMethod.recvSrpIdAndSecret 'if' is false");
 
-					LOGGER.info("ssoSubMethod.recvSrpIdAndSecret 'if' is false");
+						throw new CannotAcquireDataException(RESP_SRPIDFAILED);
+//						userRoleByScopes.setDesc(RESP_SRPIDFAILED);
+//						userRoleByScopes.setLoginFlag(false);
+//						return userRoleByScopes;
 
-					userRoleByScopes.setDesc(RESP_SRPIDFAILED);
-					userRoleByScopes.setLoginFlag(false);
-					return userRoleByScopes;
+					}
+
+					/* At this stage srpId should already present */
+				}
+				if (role.equalsIgnoreCase(role_developer)) {
+
+					LOGGER.info("ssoSubMethod.role 'if' equal developer ");
+
+					/* Matching role with space */
+					for (int j = 0; j < arrNode.get("cfScopes").get(i).get("spaces").size(); j++) {
+
+						/* Iterate for all possible elements inside spaces */
+						if (arrNode.get("cfScopes").get(i).get("spaces").get(j).textValue()
+								.equalsIgnoreCase(recvApplicationEvn("space_id"))) {
+
+							/*
+							 * When some element inside cfScopes.spaces match space_id will return
+							 * authorized
+							 */
+							userRoleByScopes.setDesc(RESP_AUTHORIZED);
+							userRoleByScopes.setLoginFlag(true);
+							return userRoleByScopes;
+						}
+
+					}
 
 				}
-
-				/* At this stage srpId should already present */
 			}
-			if (role.equalsIgnoreCase(role_developer)) {
 
-				LOGGER.info("ssoSubMethod.role 'if' equal developer ");
+			/* Initiate when role is not tenant and there is no spaceid inside cfScopes */
+			JsonNode scopes = arrNode.withArray("scopes");
+			if (!role.equalsIgnoreCase(role_tenant)) {
 
-				/* Matching role with space */
-				for (int j = 0; j < arrNode.get("cfScopes").get(i).get("spaces").size(); j++) {
+				LOGGER.info("ssoSubMethod.userRoleByScopesscopes.scopes is true");
+				for (int k = 0; k < scopes.size(); k++) {
 
-					/* Iterate for all possible elements inside spaces */
-					if (arrNode.get("cfScopes").get(i).get("spaces").get(j).textValue()
-							.equalsIgnoreCase(recvApplicationEvn("space_id"))) {
+					/* Iterate for all possible elements inside scopes */
+					String[] scopesElement = scopes.get(k).textValue().split("\\.");
 
-						/*
-						 * When some element inside cfScopes.spaces match space_id will return
-						 * authorized
-						 */
+					if (scopesElement[0].equalsIgnoreCase(srpId)) {
+
+						/* When some element of scopes matched with srpId then returns authorized */
+						LOGGER.info("userRoleByScopes.userRoleByScopesscopes.scopesElement is true");
 						userRoleByScopes.setDesc(RESP_AUTHORIZED);
 						userRoleByScopes.setLoginFlag(true);
 						return userRoleByScopes;
 					}
 
 				}
-
 			}
+			/* No element of scopes match srpId then returns unauthorized */
+			LOGGER.info("ssoSubMethod.userRoleByScopesscopes.scopesElement is false");
+			throw new CannotAcquireDataException(RESP_UNAUTHORIZED);
+//			userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
+//			userRoleByScopes.setLoginFlag(false);
+//			return userRoleByScopes;
+
+		} catch (Exception e) {
+			throw new CannotAcquireDataException(e.getMessage());
 		}
-
-		/* Initiate when role is not tenant and there is no spaceid inside cfScopes */
-		JsonNode scopes = arrNode.withArray("scopes");
-		if (!role.equalsIgnoreCase(role_tenant)) {
-
-			LOGGER.info("ssoSubMethod.userRoleByScopesscopes.scopes is true");
-			for (int k = 0; k < scopes.size(); k++) {
-
-				/* Iterate for all possible elements inside scopes */
-				String[] scopesElement = scopes.get(k).textValue().split("\\.");
-
-				if (scopesElement[0].equalsIgnoreCase(srpId)) {
-
-					/* When some element of scopes matched with srpId then returns authorized */
-					LOGGER.info("userRoleByScopes.userRoleByScopesscopes.scopesElement is true");
-					userRoleByScopes.setDesc(RESP_AUTHORIZED);
-					userRoleByScopes.setLoginFlag(true);
-					return userRoleByScopes;
-				}
-
-			}
-		}
-		/* No element of scopes match srpId then returns unauthorized */
-		LOGGER.info("ssoSubMethod.userRoleByScopesscopes.scopesElement is false");
-		userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
-		userRoleByScopes.setLoginFlag(false);
-		return userRoleByScopes;
-
 	}
 }

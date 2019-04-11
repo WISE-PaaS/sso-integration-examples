@@ -30,6 +30,7 @@ import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.ResponseCookie;
 import qa.com.classDefinition.loginInput;
 import qa.com.db.PostgreSql;
+import qa.com.ssoException.CannotAcquireDataException;
 
 @RestController
 public class ssoController {
@@ -38,6 +39,7 @@ public class ssoController {
 	private ssoService ssoService;
 	@Autowired
 	private ObjectMapper objMapper;
+
 	@Autowired
 	private PostgreSql postgres;
 
@@ -56,12 +58,12 @@ public class ssoController {
 				HttpStatus.OK);
 	}
 
-	@RequestMapping(method = RequestMethod.GET, value = "/user")
-	public ResponseEntity<EINameTemplate> getUsername(@CookieValue(value = "EIName", required = true) String EIName)
-			throws Exception {
-
-		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
-	}
+//	@RequestMapping(method = RequestMethod.GET, value = "/user")
+//	public ResponseEntity<EINameTemplate> getUsername(@CookieValue(value = "EIName", required = true) String EIName)
+//			throws Exception {
+//
+//		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
+//	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/params")
 	public ResponseEntity<ObjectNode> getParams() throws Exception {
@@ -71,10 +73,10 @@ public class ssoController {
 
 	@RequestMapping(method = RequestMethod.GET, value = "/test")
 	public ResponseEntity<String> noupdate(HttpServletRequest req, HttpServletResponse resp)
-			throws ClassNotFoundException, SQLException, IOException {
-
-//		postgres.getConn("jdbc:mysql://localhost/test", "username", "password");
-
+			throws ClassNotFoundException, SQLException, IOException, CannotAcquireDataException {
+//		System.out.println(resp.getOutputStream().isReady());
+//		System.out.printf("is commited: " + req.getInputStream().available() + "\n");
+		postgres.getConn(req, "jdbc:mysql://localhost/test", "username", "password");
 		return new ResponseEntity<String>("OK", HttpStatus.ACCEPTED);
 	}
 
@@ -94,35 +96,35 @@ public class ssoController {
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/add")
-	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
-			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
-
-		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
-
-		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/delete")
-	public ResponseEntity<ObjectNode> deleteUser(@RequestBody ObjectNode Response,
-			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
-
-		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
-
-		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/list")
-	public ResponseEntity<ObjectNode> userList() throws Exception {
-
-		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
-
-		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-
-	}
+//
+//	@RequestMapping(method = RequestMethod.POST, value = "/add")
+//	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
+//			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+//
+//		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
+//
+//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+//
+//	}
+//
+//	@RequestMapping(method = RequestMethod.POST, value = "/delete")
+//	public ResponseEntity<ObjectNode> deleteUser(@RequestBody ObjectNode Response,
+//			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+//
+//		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
+//
+//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+//
+//	}
+//
+//	@RequestMapping(method = RequestMethod.POST, value = "/list")
+//	public ResponseEntity<ObjectNode> userList() throws Exception {
+//
+//		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
+//
+//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+//
+//	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
 	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,

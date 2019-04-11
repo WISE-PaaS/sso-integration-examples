@@ -2,9 +2,9 @@
   "name": "login-template",
   "version": "1.0.0",
   "description": "1. 請自行更改`<img id=\"center-logo-first\" class=\"img-responsive\" src=\"img/EdgeSense.svg\">`內容。",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "dev": "http-server -p 8888 -c-1"
+    "dev": "http-server -p 8080 -c-1"
   },
   "repository": {
     "type": "git",

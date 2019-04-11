@@ -1,7 +1,7 @@
 var GLOBAL_CONFIG = {
     version: 'v-2.0.26',
-    apiHostUrl: getSSOUri() + '/v2.0',
-    webHostUrl: getSSOUri() + '/web',
+    apiHostUrl: getSSOUri()  + '/v2.0',
+    webHostUrl: getSSOUri()  + '/web',
     tpHostUrl: getSSOUri().replace('portal-sso', 'portal-technical'),
     platform: getPlatform(window.location.host)
 };
@@ -27,5 +27,6 @@ function getPlatform(host) {
 }
 
 function getSSOUri() {
-    return window.location.protocol + '//' + window.location.host;
+    // return window.location.protocol + '//' + window.location.host;
+    return  'https://portal-sso.wise-paas.com';
 }
