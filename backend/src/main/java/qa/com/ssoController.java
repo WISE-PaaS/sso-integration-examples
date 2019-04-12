@@ -78,6 +78,16 @@ public class ssoController {
 
 	}
 
+	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
+	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,
+			@CookieValue(value = "refreshToken", required = true) String refreshToken) throws Exception {
+
+		ObjectNode res = new ObjectMapper().convertValue(ssoService.doLoginByToken(EIToken, refreshToken),
+				ObjectNode.class);
+
+		return new ResponseEntity<ObjectNode>(res, HttpStatus.ACCEPTED);
+	}
+
 	@RequestMapping(method = RequestMethod.POST, value = "/add")
 	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
 			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
@@ -105,16 +115,6 @@ public class ssoController {
 
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
-	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,
-			@CookieValue(value = "refreshToken", required = true) String refreshToken) throws Exception {
-
-		ObjectNode res = new ObjectMapper().convertValue(ssoService.doLoginByToken(EIToken, refreshToken),
-				ObjectNode.class);
-
-		return new ResponseEntity<ObjectNode>(res, HttpStatus.ACCEPTED);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/logout")

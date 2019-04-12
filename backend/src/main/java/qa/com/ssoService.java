@@ -52,8 +52,7 @@ public class ssoService {
 	final String RESP_TOKEN_NOT_FOUND = "EIToken not found";
 	final String RESP_TOKEN_EXPIRED = "EIToken expired";
 
-	@Value("${sso.apiendpoint}")
-	private String SSO_API_ENDPOINT;
+	private String SSO_API_ENDPOINT = "https://portal-sso.ali.wise-paas.com.cn/v2.0";
 
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ssoService.class);
 
