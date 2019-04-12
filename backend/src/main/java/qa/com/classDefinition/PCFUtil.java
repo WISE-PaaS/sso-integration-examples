@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Iterator;
 
+import org.springframework.beans.factory.annotation.Value;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -18,9 +20,15 @@ import java.util.Iterator;
  * updated by avbee 270319
  */
 public class PCFUtil {
-	public static String postgresUrl = "";
-	public static String postgresUsername = "";
-	public static String postgresPassword = "";
+	
+	@Value("${sso.postgresql.url}")
+	public static String postgresUrl;
+
+	@Value("${sso.postgresql.user}")
+	public static String postgresUsername;
+
+	@Value("${sso.postgresql.pwd}")
+	public static String postgresPassword;
 
 	public static void GetPostgresEnv() {
 		try {

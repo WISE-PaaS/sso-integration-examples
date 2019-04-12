@@ -91,13 +91,6 @@ public class ssoSubMethod {
 
 				scopes = responseJson.withArray("scopes");
 
-				/*
-				 * Debug Function
-				 */
-//					scopes = null;
-//					srpId = "";
-//					System.out.println(scopes);
-
 			}
 
 			if (srpId.equals(null)) {
@@ -110,10 +103,6 @@ public class ssoSubMethod {
 				addSrpBody.put("spaceId", spaceId);
 				addSrpBody.put("appId", spaceId);
 				addSrpBody.putArray("scopes").addAll(scopes);
-
-				/*
-				 * Debug Function
-				 */
 
 			}
 
@@ -191,12 +180,6 @@ public class ssoSubMethod {
 			Optional<byte[]> oEncrypt = AES.Encrypt(src, key);
 
 			String base64UrlStr = Base64.getUrlEncoder().encodeToString(oEncrypt.get());
-
-			/*
-			 * Debug
-			 */
-//			System.out.printf("%-32s %s %s\n", "BASE64 ENCRYPT", ":", base64Str);
-//			System.out.printf("%-32s %s %s\n", "BASE64URL ENCRYPT", ":", base64UrlStr);
 
 			return base64UrlStr;
 
@@ -291,9 +274,7 @@ public class ssoSubMethod {
 
 					LOGGER.info("ssoSubMethod.userRoleByScopes 'if'  role is NOT tenant ");
 					throw new CannotAcquireDataException(RESP_UNAUTHORIZED);
-//					userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
-//					userRoleByScopes.setLoginFlag(false);
-//					return userRoleByScopes;
+
 				}
 
 				/* Verification of srpId for other users */
@@ -306,9 +287,6 @@ public class ssoSubMethod {
 						LOGGER.info("ssoSubMethod.recvSrpIdAndSecret 'if' is false");
 
 						throw new CannotAcquireDataException(RESP_SRPIDFAILED);
-//						userRoleByScopes.setDesc(RESP_SRPIDFAILED);
-//						userRoleByScopes.setLoginFlag(false);
-//						return userRoleByScopes;
 
 					}
 
@@ -363,9 +341,6 @@ public class ssoSubMethod {
 			/* No element of scopes match srpId then returns unauthorized */
 			LOGGER.info("ssoSubMethod.userRoleByScopesscopes.scopesElement is false");
 			throw new CannotAcquireDataException(RESP_UNAUTHORIZED);
-//			userRoleByScopes.setDesc(RESP_UNAUTHORIZED);
-//			userRoleByScopes.setLoginFlag(false);
-//			return userRoleByScopes;
 
 		} catch (Exception e) {
 			throw new CannotAcquireDataException(e.getMessage());

@@ -8,14 +8,12 @@ package qa.com;
 
 import java.net.URI;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.servlet.http.Cookie;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,13 +26,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.jsonwebtoken.Claims;
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.LoginRes;
 import qa.com.classDefinition.PCFUtil;
@@ -56,7 +52,8 @@ public class ssoService {
 	final String RESP_TOKEN_NOT_FOUND = "EIToken not found";
 	final String RESP_TOKEN_EXPIRED = "EIToken expired";
 
-	public static final String SSO_API_ENDPOINT = "https://portal-sso.ali.wise-paas.com.cn/v2.0";
+	@Value("${sso.apiendpoint}")
+	private String SSO_API_ENDPOINT;
 
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ssoService.class);
 
@@ -114,10 +111,7 @@ public class ssoService {
 
 				LOGGER.info(" doLogin.getToken 'if' responseNode has error ");
 
-//				loginRes.setErrorDescription(responseNode.get("error").toString());
 				throw new CannotAcquireDataException(responseNode.get("error").toString());
-//				res.setStrJson(mapper.writeValueAsString(loginRes));
-//				return res;
 
 			} else {
 
@@ -190,18 +184,12 @@ public class ssoService {
 
 				throw new CannotAcquireDataException(RESP_TOKEN_NOT_FOUND);
 
-//				loginRes.setErrorDescription(RESP_TOKEN_NOT_FOUND);
-//				return loginRes;
-
 			} else if (!SSO.doValidateToken(EIToken)) {
 
 				LOGGER.info("doLoginByToken.doValidateToken is false - initiate logout");
 				doLogout();
 
 				throw new CannotAcquireDataException(RESP_TOKEN_EXPIRED);
-
-//				loginRes.setErrorDescription(RESP_TOKEN_EXPIRED);
-//				return loginRes;
 
 			}
 
@@ -235,162 +223,162 @@ public class ssoService {
 		return loginRes;
 	}
 
-//	public String patchUser(String EIToken, ObjectNode conJson) throws Exception {
-//
-//		String email;
-//
-//		PatchUserRes patchUserRes = new PatchUserRes();
-//		try {
-//
-//			email = conJson.get("email").textValue();
-//
-//			/*
-//			 * If SSO.srpId contains null, method will throws error, therefore errorHandler
-//			 * for string null in SSO.srpID should be empty string -> \""
-//			 */
-//			if (SSO.srpId.equals("")) {
-//				if (!SSO.recvSrpIdAndSecret()) {
-//					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
-//					return patchUserRes.toString();
-//				}
-//			}
-//			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
-//			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-//
-//			ObjectNode body = mapper.createObjectNode();
-//			body.put("srpId", SSO.srpId);
-//			body.put("srpSecret", SSO.srpSecret);
-//			body.put("action", "append");
-//			body.putArray("scopes");
-//			body.put("scopes", "user");
-//
-//			HttpHeaders headers = new HttpHeaders();
-//			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-//			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
-//			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
-//			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
-//			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
-//
-//			if (resJson.has("error")) {
-//				if (resJson.get("message").get("exist").asInt() != -1
-//						&& resJson.get("message").get("scope").asInt() != -1) {
-//
-//				} else {
-//					patchUserRes.setErrorDescription(resJson.get("error").textValue());
-//					return patchUserRes.toString();
-//				}
-//			}
-//
-//		} catch (Exception e) {
-//			// TODO: handle exception
-//			System.out.println(e.getMessage());
-//			patchUserRes.setErrorDescription(e.getMessage());
-//			return patchUserRes.toString();
-//		}
-//		PCFUtil.GetPostgresEnv();
-//		/*
-//		 * PostgreSql library is not present on this code. No PostgreSql library on old
-//		 * version of SsoService also.
-//		 */
-//
-//		PostgreSql sql = new PostgreSql();
-//		sql.insertUser(req,PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
-//		return patchUserRes.toString();
-//
-//	}
-//
-//	public String deleteUser(String EIToken, ObjectNode conJson) throws Exception {
-//
-//		String email;
-//
-//		PatchUserRes patchUserRes = new PatchUserRes();
-//		try {
-//
-//			email = conJson.get("email").textValue();
-//			if (SSO.srpId.equals("")) {
-//				if (!SSO.recvSrpIdAndSecret()) {
-//					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
-//					return patchUserRes.toString();
-//				}
-//			}
-//			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
-//			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-//
-//			ObjectNode body = mapper.createObjectNode();
-//			body.put("srpId", SSO.srpId);
-//			body.put("srpSecret", SSO.srpSecret);
-//			body.put("action", "append");
-//			body.putArray("scopes");
-//			body.put("scopes", "user");
-//
-//			HttpHeaders headers = new HttpHeaders();
-//			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-//			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
-//			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
-//			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
-//			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
-//
-//			if (resJson.has("error")) {
-//
-//				patchUserRes.setErrorDescription(resJson.get("error").textValue());
-//				return patchUserRes.toString();
-//
-//			}
-//
-//		} catch (Exception e) {
-//			// TODO: handle exception
-//			System.out.println(e.getMessage());
-//			patchUserRes.setErrorDescription(e.getMessage());
-//			return patchUserRes.toString();
-//		}
-//		PCFUtil.GetPostgresEnv();
-//
-//		PostgreSql sql = new PostgreSql();
-//		sql.deleteUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
-//		return patchUserRes.toString();
-//
-//	}
-//
-//	private ClientHttpRequestFactory clientHttpRequestFactory() {
-//		// is it ok to create a new instance of HttpComponentsClientHttpRequestFactory
-//		// everytime?
-//		int timeout = 5;
-//		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-//		factory.setReadTimeout(timeout); // setting timeout as read timeout
-//		factory.setConnectTimeout(timeout); // setting timeout as connect timeout
-//
-//		return factory;
-//	}
-//
-//	public EINameTemplate doGetUserName(String EIName) {
-//		EINameTemplate resEIName = new EINameTemplate();
-//
-//		try {
-//			resEIName.setUserName(EIName);
-//			return resEIName;
-//
-//		} catch (Exception e) {
-//			// TODO: handle exception
-//			resEIName.setErrorDescription(e.getMessage());
-//			return resEIName;
-//		}
-//
-//	}
-//
-//	public String doGetUserList() {
-//		User allUsers = new User();
-//
-//		try {
-//			PCFUtil.GetPostgresEnv();
-//			PostgreSql sql = new PostgreSql();
-//			allUsers = sql.getUserList(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword);
-//		} catch (Exception e) {
-//			// TODO: handle exception
-//			allUsers.setErrorDescription(e.getMessage());
-//
-//		}
-//		return allUsers.getErrorDescription();
-//	}
+	public String patchUser(String EIToken, ObjectNode conJson) throws Exception {
+
+		String email;
+
+		PatchUserRes patchUserRes = new PatchUserRes();
+		try {
+
+			email = conJson.get("email").textValue();
+
+			/*
+			 * If SSO.srpId contains null, method will throws error, therefore errorHandler
+			 * for string null in SSO.srpID should be empty string -> \""
+			 */
+			if (SSO.srpId.equals("")) {
+				if (!SSO.recvSrpIdAndSecret()) {
+					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
+					return patchUserRes.toString();
+				}
+			}
+			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
+			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+			ObjectNode body = mapper.createObjectNode();
+			body.put("srpId", SSO.srpId);
+			body.put("srpSecret", SSO.srpSecret);
+			body.put("action", "append");
+			body.putArray("scopes");
+			body.put("scopes", "user");
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
+			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
+			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
+			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
+
+			if (resJson.has("error")) {
+				if (resJson.get("message").get("exist").asInt() != -1
+						&& resJson.get("message").get("scope").asInt() != -1) {
+
+				} else {
+					patchUserRes.setErrorDescription(resJson.get("error").textValue());
+					return patchUserRes.toString();
+				}
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e.getMessage());
+			patchUserRes.setErrorDescription(e.getMessage());
+			return patchUserRes.toString();
+		}
+		PCFUtil.GetPostgresEnv();
+		/*
+		 * PostgreSql library is not present on this code. No PostgreSql library on old
+		 * version of SsoService also.
+		 */
+
+		PostgreSql sql = new PostgreSql();
+		sql.insertUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
+		return patchUserRes.toString();
+
+	}
+
+	public String deleteUser(String EIToken, ObjectNode conJson) throws Exception {
+
+		String email;
+
+		PatchUserRes patchUserRes = new PatchUserRes();
+		try {
+
+			email = conJson.get("email").textValue();
+			if (SSO.srpId.equals("")) {
+				if (!SSO.recvSrpIdAndSecret()) {
+					patchUserRes.setErrorDescription(RESP_SRPIDFAILED);
+					return patchUserRes.toString();
+				}
+			}
+			String urlPatch = SSO.recvSSOUrl() + "/v2.0/users/" + email + "/scopes";
+			ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+			ObjectNode body = mapper.createObjectNode();
+			body.put("srpId", SSO.srpId);
+			body.put("srpSecret", SSO.srpSecret);
+			body.put("action", "append");
+			body.putArray("scopes");
+			body.put("scopes", "user");
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+			headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + EIToken);
+			HttpEntity<String> he = new HttpEntity<String>(body.toString(), headers);
+			RestTemplate restTemplate = new RestTemplate(clientHttpRequestFactory());
+			ObjectNode resJson = restTemplate.patchForObject(urlPatch, he, ObjectNode.class);
+
+			if (resJson.has("error")) {
+
+				patchUserRes.setErrorDescription(resJson.get("error").textValue());
+				return patchUserRes.toString();
+
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e.getMessage());
+			patchUserRes.setErrorDescription(e.getMessage());
+			return patchUserRes.toString();
+		}
+		PCFUtil.GetPostgresEnv();
+
+		PostgreSql sql = new PostgreSql();
+		sql.deleteUser(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword, email);
+		return patchUserRes.toString();
+
+	}
+
+	private ClientHttpRequestFactory clientHttpRequestFactory() {
+		// is it ok to create a new instance of HttpComponentsClientHttpRequestFactory
+		// everytime?
+		int timeout = 5;
+		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+		factory.setReadTimeout(timeout); // setting timeout as read timeout
+		factory.setConnectTimeout(timeout); // setting timeout as connect timeout
+
+		return factory;
+	}
+
+	public EINameTemplate doGetUserName(String EIName) {
+		EINameTemplate resEIName = new EINameTemplate();
+
+		try {
+			resEIName.setUserName(EIName);
+			return resEIName;
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			resEIName.setErrorDescription(e.getMessage());
+			return resEIName;
+		}
+
+	}
+
+	public String doGetUserList() {
+		User allUsers = new User();
+
+		try {
+			PCFUtil.GetPostgresEnv();
+			PostgreSql sql = new PostgreSql();
+			allUsers = sql.getUserList(PCFUtil.postgresUrl, PCFUtil.postgresUsername, PCFUtil.postgresPassword);
+		} catch (Exception e) {
+			// TODO: handle exception
+			allUsers.setErrorDescription(e.getMessage());
+
+		}
+		return allUsers.getErrorDescription();
+	}
 
 	public ResponseCookie doLogout() throws CannotAcquireDataException {
 		ResponseCookie res = new ResponseCookie();

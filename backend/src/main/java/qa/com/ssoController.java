@@ -7,10 +7,6 @@
 
 package qa.com;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +24,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.ResponseCookie;
-import qa.com.classDefinition.loginInput;
-import qa.com.db.PostgreSql;
-import qa.com.ssoException.CannotAcquireDataException;
 
 @RestController
 public class ssoController {
@@ -39,9 +32,6 @@ public class ssoController {
 	private ssoService ssoService;
 	@Autowired
 	private ObjectMapper objMapper;
-
-	@Autowired
-	private PostgreSql postgres;
 
 	/* GET METHODS */
 
@@ -58,26 +48,17 @@ public class ssoController {
 				HttpStatus.OK);
 	}
 
-//	@RequestMapping(method = RequestMethod.GET, value = "/user")
-//	public ResponseEntity<EINameTemplate> getUsername(@CookieValue(value = "EIName", required = true) String EIName)
-//			throws Exception {
-//
-//		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
-//	}
+	@RequestMapping(method = RequestMethod.GET, value = "/user")
+	public ResponseEntity<EINameTemplate> getUsername(@CookieValue(value = "EIName", required = true) String EIName)
+			throws Exception {
+
+		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
+	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/params")
 	public ResponseEntity<ObjectNode> getParams() throws Exception {
 
 		return new ResponseEntity<ObjectNode>(ssoService.getParams(), HttpStatus.ACCEPTED);
-	}
-
-	@RequestMapping(method = RequestMethod.GET, value = "/test")
-	public ResponseEntity<String> noupdate(HttpServletRequest req, HttpServletResponse resp)
-			throws ClassNotFoundException, SQLException, IOException, CannotAcquireDataException {
-//		System.out.println(resp.getOutputStream().isReady());
-//		System.out.printf("is commited: " + req.getInputStream().available() + "\n");
-		postgres.getConn(req, "jdbc:mysql://localhost/test", "username", "password");
-		return new ResponseEntity<String>("OK", HttpStatus.ACCEPTED);
 	}
 
 	/* POST METHODS */
@@ -96,35 +77,35 @@ public class ssoController {
 		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
 
 	}
-//
-//	@RequestMapping(method = RequestMethod.POST, value = "/add")
-//	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
-//			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
-//
-//		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
-//
-//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-//
-//	}
-//
-//	@RequestMapping(method = RequestMethod.POST, value = "/delete")
-//	public ResponseEntity<ObjectNode> deleteUser(@RequestBody ObjectNode Response,
-//			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
-//
-//		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
-//
-//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-//
-//	}
-//
-//	@RequestMapping(method = RequestMethod.POST, value = "/list")
-//	public ResponseEntity<ObjectNode> userList() throws Exception {
-//
-//		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
-//
-//		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
-//
-//	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/add")
+	public ResponseEntity<ObjectNode> addUser(@RequestBody ObjectNode Response,
+			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.patchUser(EIToken, Response), ObjectNode.class);
+
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/delete")
+	public ResponseEntity<ObjectNode> deleteUser(@RequestBody ObjectNode Response,
+			@CookieValue(value = "EIToken", required = true) String EIToken) throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.deleteUser(EIToken, Response), ObjectNode.class);
+
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/list")
+	public ResponseEntity<ObjectNode> userList() throws Exception {
+
+		ObjectNode json = new ObjectMapper().readValue(ssoService.doGetUserList(), ObjectNode.class);
+
+		return new ResponseEntity<ObjectNode>(json, HttpStatus.OK);
+
+	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
 	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,
@@ -140,22 +121,6 @@ public class ssoController {
 	public ResponseEntity<ResponseCookie> doLogout() throws Exception {
 
 		return new ResponseEntity<ResponseCookie>(ssoService.doLogout(), HttpStatus.ACCEPTED);
-	}
-
-	/*
-	 * Testing request
-	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/test")
-	public ResponseEntity<loginInput> update(@RequestBody loginInput linput) throws IOException {
-
-		if (linput != null) {
-			linput.setUsername("aa");
-		}
-
-		System.out.println(linput);
-		System.out.println(linput.toString());
-
-		return new ResponseEntity<loginInput>(linput, HttpStatus.ACCEPTED);
 	}
 
 }
