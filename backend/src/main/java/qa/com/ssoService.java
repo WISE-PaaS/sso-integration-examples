@@ -13,7 +13,6 @@ import javax.servlet.http.Cookie;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

@@ -1,0 +1,163 @@
+.
+├── bin
+│   ├── main
+│   │   ├── application.properties
+│   │   └── qa
+│   │       └── com
+│   │           ├── AES.class
+│   │           ├── BackendApplication.class
+│   │           ├── classDefinition
+│   │           │   ├── EINameTemplate.class
+│   │           │   ├── loginInput.class
+│   │           │   ├── LoginRes.class
+│   │           │   ├── PatchUserRes.class
+│   │           │   ├── PCFUtil.class
+│   │           │   ├── ResponseCookie.class
+│   │           │   ├── ResponseDesc.class
+│   │           │   ├── User.class
+│   │           │   ├── UserInfo.class
+│   │           │   └── UserRoleByScopes.class
+│   │           ├── db
+│   │           │   ├── PostgreSql.class
+│   │           │   └── retryDBConnection.class
+│   │           ├── ssoController.class
+│   │           ├── ssoException
+│   │           │   └── CannotAcquireDataException.class
+│   │           ├── ssoService.class
+│   │           └── ssoSubMethod.class
+│   ├── qa
+│   │   └── com
+│   │       ├── AES.class
+│   │       ├── BackendApplication.class
+│   │       ├── BackendApplicationTests.class
+│   │       ├── classDefinition
+│   │       │   ├── EINameTemplate.class
+│   │       │   ├── loginInput.class
+│   │       │   ├── LoginRes.class
+│   │       │   ├── PatchUserRes.class
+│   │       │   ├── PCFUtil.class
+│   │       │   ├── ResponseCookie.class
+│   │       │   ├── ResponseDesc.class
+│   │       │   ├── User.class
+│   │       │   └── UserInfo.class
+│   │       ├── db
+│   │       │   ├── PostgreSql.class
+│   │       │   └── retryDBConnection.class
+│   │       ├── SsoApplicationTests.class
+│   │       ├── ssoController.class
+│   │       ├── ssoService.class
+│   │       └── ssoSubMethod.class
+│   └── test
+│       └── qa
+│           └── com
+│               ├── BackendApplicationTests.class
+│               └── SsoApplicationTests.class
+├── build
+│   ├── classes
+│   │   └── java
+│   │       ├── main
+│   │       │   └── qa
+│   │       │       └── com
+│   │       │           ├── AES.class
+│   │       │           ├── BackendApplication.class
+│   │       │           ├── classDefinition
+│   │       │           │   ├── EINameTemplate.class
+│   │       │           │   ├── loginInput.class
+│   │       │           │   ├── LoginRes.class
+│   │       │           │   ├── PatchUserRes.class
+│   │       │           │   ├── PCFUtil.class
+│   │       │           │   ├── ResponseCookie.class
+│   │       │           │   ├── ResponseDesc.class
+│   │       │           │   ├── User.class
+│   │       │           │   ├── UserInfo.class
+│   │       │           │   └── UserRoleByScopes.class
+│   │       │           ├── db
+│   │       │           │   ├── PostgreSql.class
+│   │       │           │   └── retryDBConnection.class
+│   │       │           ├── ssoController.class
+│   │       │           ├── ssoException
+│   │       │           │   └── CannotAcquireDataException.class
+│   │       │           ├── ssoService.class
+│   │       │           └── ssoSubMethod.class
+│   │       └── test
+│   │           └── qa
+│   │               └── com
+│   │                   ├── BackendApplicationTests.class
+│   │                   └── SsoApplicationTests.class
+│   ├── libs
+│   │   └── sso-1.0.0.jar
+│   ├── reports
+│   │   └── tests
+│   │       └── test
+│   │           ├── classes
+│   │           │   ├── qa.com.BackendApplicationTests.html
+│   │           │   └── qa.com.SsoApplicationTests.html
+│   │           ├── css
+│   │           │   ├── base-style.css
+│   │           │   └── style.css
+│   │           ├── index.html
+│   │           ├── js
+│   │           │   └── report.js
+│   │           └── packages
+│   │               └── qa.com.html
+│   ├── resources
+│   │   └── main
+│   │       └── application.properties
+│   ├── test-results
+│   │   └── test
+│   │       ├── binary
+│   │       │   ├── output.bin
+│   │       │   ├── output.bin.idx
+│   │       │   └── results.bin
+│   │       ├── TEST-qa.com.BackendApplicationTests.xml
+│   │       └── TEST-qa.com.SsoApplicationTests.xml
+│   └── tmp
+│       ├── bootJar
+│       │   └── MANIFEST.MF
+│       ├── compileJava
+│       └── compileTestJava
+├── build.gradle
+├── gradle
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── gradlew
+├── gradlew.bat
+├── settings.gradle
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── qa
+│   │   │       └── com
+│   │   │           ├── AES.java
+│   │   │           ├── BackendApplication.java
+│   │   │           ├── classDefinition
+│   │   │           │   ├── EINameTemplate.java
+│   │   │           │   ├── loginInput.java
+│   │   │           │   ├── LoginRes.java
+│   │   │           │   ├── PatchUserRes.java
+│   │   │           │   ├── PCFUtil.java
+│   │   │           │   ├── ResponseCookie.java
+│   │   │           │   ├── ResponseDesc.java
+│   │   │           │   ├── UserInfo.java
+│   │   │           │   ├── User.java
+│   │   │           │   └── UserRoleByScopes.java
+│   │   │           ├── db
+│   │   │           │   ├── PostgreSql.java
+│   │   │           │   └── retryDBConnection.java
+│   │   │           ├── ssoController.java
+│   │   │           ├── ssoException
+│   │   │           │   └── CannotAcquireDataException.java
+│   │   │           ├── ssoService.java
+│   │   │           └── ssoSubMethod.java
+│   │   └── resources
+│   │       └── application.properties
+│   └── test
+│       └── java
+│           └── qa
+│               └── com
+│                   ├── BackendApplicationTests.java
+│                   └── SsoApplicationTests.java
+└── tree.txt
+
+58 directories, 102 files

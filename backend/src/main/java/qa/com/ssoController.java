@@ -9,6 +9,9 @@ package qa.com;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +19,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import qa.com.classDefinition.EINameTemplate;
 import qa.com.classDefinition.ResponseCookie;
@@ -36,16 +35,10 @@ public class ssoController {
 	/* GET METHODS */
 
 	@RequestMapping(method = RequestMethod.GET, value = "/users/me")
-	public ResponseEntity<ObjectNode> getTokenUser(@RequestParam(value = "username", required = true) String username,
-			@RequestParam(value = "password", required = true) String password) throws Exception {
+	public ResponseEntity<ObjectNode> getTokenUser(@CookieValue(value = "EIName", required = true) String EIoken)
+			throws Exception {
 
-		ObjectNode tokenPackage = ssoService
-				.getToken(objMapper.createObjectNode().put("username", username).put("password", password));
-		ObjectNode tokenPayload = objMapper.createObjectNode().put("token", tokenPackage.get("refreshToken").asText());
-		tokenPackage = ssoService.refreshToken(tokenPayload);
-
-		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(tokenPackage.get("accessToken").asText()),
-				HttpStatus.OK);
+		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(EIoken), HttpStatus.OK);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/user")

@@ -250,18 +250,17 @@ public class ssoSubMethod {
 			final JsonNode arrNode = new ObjectMapper().readTree(decodeStr);
 
 			JsonNode cfScope = arrNode.withArray("cfScopes");
-
-			System.out.println(cfScope);
+			
 			String role = arrNode.get("role").asText();
-
+			
 			/* Accessing object inside cfScope */
 			for (int i = 0; i < cfScope.size(); i++) {
 
 				LOGGER.info("ssoSubMethod 'for' Accessing object inside jsonArray");
-
+				System.out.println(arrNode.get("cfScopes").get(i).get("guid").asText());
 				/* Verified if current orgId equal with cfscope guid */
 				if (System.getenv("org_id").equalsIgnoreCase(arrNode.get("cfScopes").get(i).get("guid").asText())) {
-
+					
 					/* Verified if role is tenant */
 					LOGGER.info("ssoSubMethod.userRoleByScopes 'if' verified if role is tenant ");
 					if (role.equalsIgnoreCase(role_tenant)) {
