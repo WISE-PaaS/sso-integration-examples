@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,7 +32,7 @@ public class ssoController {
 	private ssoService ssoService;
 
 	/* GET METHODS */
-
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.GET, value = "/users/me")
 	public ResponseEntity<ObjectNode> getTokenUser(@CookieValue(value = "EIToken", required = true) String EIToken)
 			throws Exception {
@@ -39,6 +40,7 @@ public class ssoController {
 		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(EIToken), HttpStatus.OK);
 	}
 
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.GET, value = "/user")
 	public ResponseEntity<EINameTemplate> getUsername(@CookieValue(value = "EIName", required = true) String EIName)
 			throws Exception {
@@ -46,6 +48,7 @@ public class ssoController {
 		return new ResponseEntity<EINameTemplate>(ssoService.doGetUserName(EIName), HttpStatus.ACCEPTED);
 	}
 
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.GET, value = "/params")
 	public ResponseEntity<ObjectNode> getParams() throws Exception {
 
@@ -53,7 +56,7 @@ public class ssoController {
 	}
 
 	/* POST METHODS */
-
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.POST, value = "/login")
 	public ResponseEntity<ObjectNode> login(@RequestBody ObjectNode Response, HttpServletResponse response)
 			throws Exception {
@@ -69,6 +72,7 @@ public class ssoController {
 
 	}
 
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.POST, value = "/login/token")
 	public ResponseEntity<ObjectNode> loginByToken(@CookieValue(value = "EIToken", required = true) String EIToken,
 			@CookieValue(value = "refreshToken", required = true) String refreshToken) throws Exception {
@@ -108,6 +112,7 @@ public class ssoController {
 
 	}
 
+	@CrossOrigin
 	@RequestMapping(method = RequestMethod.POST, value = "/logout")
 	public ResponseEntity<ResponseCookie> doLogout() throws Exception {
 
