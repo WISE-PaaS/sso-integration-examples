@@ -29,16 +29,14 @@ public class ssoController {
 
 	@Autowired
 	private ssoService ssoService;
-	@Autowired
-	private ObjectMapper objMapper;
 
 	/* GET METHODS */
 
 	@RequestMapping(method = RequestMethod.GET, value = "/users/me")
-	public ResponseEntity<ObjectNode> getTokenUser(@CookieValue(value = "EIName", required = true) String EIoken)
+	public ResponseEntity<ObjectNode> getTokenUser(@CookieValue(value = "EIToken", required = true) String EIToken)
 			throws Exception {
 
-		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(EIoken), HttpStatus.OK);
+		return new ResponseEntity<ObjectNode>(ssoService.getTokenUser(EIToken), HttpStatus.OK);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/user")
